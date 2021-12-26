@@ -30,7 +30,7 @@ SDL_Renderer *renderer;
 
 int main(int arc, char **argv)
 {
-
+    printf("Waddup\n");
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         printf(SDL_GetError());

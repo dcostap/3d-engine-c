@@ -5,6 +5,6 @@ CC = x86_64-w64-mingw32-gcc
 
 SRC = $(wildcard src/*.c)
 
-all: $(SRC)
-	$(CC) -o build/$@ $^ $(CFLAGS) $(LIBS) $(INCLUDES)
+build/test.exe: $(SRC)
+	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(INCLUDES)
 	cp libs/* build/
