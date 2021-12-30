@@ -11,14 +11,13 @@ typedef struct Color
     Uint8 a;
 } Color;
 
-SDL_Window *window;
-SDL_Surface *screen_surface;
-SDL_Renderer *renderer;
-const int TARGET_FPS;
-const int SCREEN_WIDTH;
-const int SCREEN_HEIGHT;
+extern SDL_Window *sdl_window;
+extern SDL_Surface *screen_surface;
+extern SDL_Renderer *renderer;
+extern const int TARGET_FPS;
+extern const int SCREEN_WIDTH;
+extern const int SCREEN_HEIGHT;
 
-bool main_loop();
-void close();
+int init_engine();
+void dispose();
 void draw_filled_triangle(Color color, int x1, int y1, int x2, int y2, int x3, int y3);
-

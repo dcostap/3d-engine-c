@@ -2,14 +2,13 @@
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
-
-SDL_Window *window = NULL;
-SDL_Surface *screen_surface = NULL;
-SDL_Renderer *renderer = NULL;
-
 const int TARGET_FPS = 60;
 
-int main(int arc, char **argv)
+SDL_Window *sdl_window;
+SDL_Surface *screen_surface;
+SDL_Renderer *renderer;
+
+int init_engine(bool (*main_loop)(void))
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -17,13 +16,13 @@ int main(int arc, char **argv)
     }
     else
     {
-        window = SDL_CreateWindow(
+        sdl_window = SDL_CreateWindow(
             "SDL2 Demo",
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             SCREEN_WIDTH, SCREEN_HEIGHT,
             SDL_WINDOW_SHOWN);
 
-        if (!window)
+        if (!sdl_window)
         {
             printf("Window could not be created!\n"
                    "SDL_Error: %s\n",
@@ -31,8 +30,8 @@ int main(int arc, char **argv)
         }
         else
         {
-            screen_surface = SDL_GetWindowSurface(window);
-            renderer = SDL_CreateRenderer(window, -1, 0);
+            screen_surface = SDL_GetWindowSurface(sdl_window);
+            renderer = SDL_CreateRenderer(sdl_window, -1, 0);
 
             bool quit = false;
             int lastTime = 0;
@@ -48,7 +47,7 @@ int main(int arc, char **argv)
 
                 lastTime = SDL_GetTicks();
             }
-            close();
+            dispose();
         }
 
         SDL_Quit();
@@ -57,49 +56,12 @@ int main(int arc, char **argv)
     return 0;
 }
 
-bool main_loop()
+void dispose()
 {
-    SDL_Event e;
-
-    while (SDL_PollEvent(&e))
-    {
-        if (e.type == SDL_QUIT)
-        {
-            return true;
-        }
-        else if (e.type == SDL_KEYDOWN)
-        {
-            switch (e.key.keysym.sym)
-            {
-            case SDLK_ESCAPE:
-                return true;
-            }
-        }
-    }
-
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    // set_pixel(10, 10, 255, 255, 255);
-
-    Color color;
-
-    color.r = 50;
-    color.g = 50;
-    color.b = 255;
-
-    draw_filled_triangle(color, 0, 0, 30, 40, 100, 20);
-
-    SDL_RenderPresent(renderer);
-
-    return true;
-}
-
-void close()
-{
-    SDL_DestroyWindow(window);
-    window = NULL;
+    SDL_DestroyWindow(sdl_window);
+    sdl_window = NULL;
     screen_surface = NULL;
+    renderer = NULL;
 }
 
 void set_pixel(int x, int y, Uint8 r, Uint8 g, Uint8 b)
