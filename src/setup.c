@@ -1,7 +1,4 @@
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
-#include <stdio.h>
-#include <stdbool.h>
+#include "setup.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
@@ -12,18 +9,9 @@ SDL_Renderer *renderer = NULL;
 
 const int TARGET_FPS = 60;
 
-typedef struct Color {
-    Uint8 r;
-    Uint8 g;
-    Uint8 b;
-    Uint8 a;
-} Color;
+int start();
 
-bool main_loop();
-void close();
-
-int main(int arc, char **argv)
-{
+int start(Main_loop main_loop) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         printf(SDL_GetError());
@@ -39,7 +27,7 @@ int main(int arc, char **argv)
         if (!window)
         {
             printf("Window could not be created!\n"
-                           "SDL_Error: %s\n",
+                   "SDL_Error: %s\n",
                    SDL_GetError());
         }
         else
@@ -57,7 +45,7 @@ int main(int arc, char **argv)
                     SDL_Delay(1);
                 }
 
-                quit = main_loop();
+                quit = (*main_loop)();
 
                 lastTime = SDL_GetTicks();
             }
@@ -83,44 +71,6 @@ void set_pixel(int x, int y, Uint8 r, Uint8 g, Uint8 b)
     Uint32 pixel = SDL_MapRGB(surface->format, r, g, b);
     Uint32 *const target_pixel = (Uint32 *)((Uint8 *)surface->pixels + y * surface->pitch + x * surface->format->BytesPerPixel);
     *target_pixel = pixel;
-}
-
-bool main_loop()
-{
-    SDL_Event e;
-
-    while (SDL_PollEvent(&e))
-    {
-        if (e.type == SDL_QUIT)
-        {
-            return true;
-        }
-        else if (e.type == SDL_KEYDOWN)
-        {
-            switch (e.key.keysym.sym)
-            {
-            case SDLK_ESCAPE:
-                return true;
-            }
-        }
-    }
-
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
-    // set_pixel(10, 10, 255, 255, 255);
-
-    Color color;
-
-    color.r = 50;
-    color.g = 50;
-    color.b = 255;
-
-    draw_filled_triangle(color, 0, 0, 30, 40, 100, 20);
-
-    SDL_RenderPresent(renderer);
-
-    return false;
 }
 
 void swap(int *x, int *y)
@@ -260,7 +210,7 @@ void draw_filled_triangle(Color color, int x1, int y1, int x2, int y2, int x3, i
         if (maxx < t2x)
             maxx = t2x;
         draw_hor_line(color, minx, maxx, y); // Draw line from min to max points found on the y
-                                  // Now increase y
+                                             // Now increase y
         if (!changed1)
             t1x += signx1;
         t1x += t1xp;
