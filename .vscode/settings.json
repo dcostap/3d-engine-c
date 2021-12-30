@@ -19,6 +19,10 @@
         "functional": "c",
         "tuple": "c",
         "type_traits": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "setup.h": "c"
+    },
+    "files.exclude": {
+        "**/include": true
     }
 }
