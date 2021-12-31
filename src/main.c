@@ -119,7 +119,7 @@ void project_vertex(Vector *vertex)
     vertex->z = vertex->z * (q - (q * z_near));
 
     // further away = smaller
-    if (fabs(orig_z) > 0.0001)
+    if (fabs(orig_z) > 0.0001) // avoid divide by 0
     {
         // printf("%.3f\n", orig_z);
         vertex->x /= orig_z;
