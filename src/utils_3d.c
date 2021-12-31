@@ -1,9 +1,5 @@
 #include "utils_3d.h"
 
-void plane_to_triangles(Vector v1, Vector v2, Vector v3, Vector v4, Triangle *triangles) {
-
-}
-
 float vec_dot_product(Vector v1, Vector v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;

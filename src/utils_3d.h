@@ -23,8 +23,6 @@ typedef struct Triangle {
     bool is_drawn;
 } Triangle;
 
-void plane_to_triangles(Vector v1, Vector v2, Vector v3, Vector v4, Triangle *triangles);
-
 float vec_dot_product(Vector v1, Vector v2);
 void vec_cross_product(Vector v1, Vector v2, Vector *result);
 void vec_sub(Vector v1, Vector v2, Vector *result);

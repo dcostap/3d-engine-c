@@ -20,4 +20,4 @@ extern const int SCREEN_HEIGHT;
 
 int init_engine();
 void dispose();
-void draw_filled_triangle(Color color, int x1, int y1, int x2, int y2, int x3, int y3);
+void draw_filled_triangle(Color, Triangle);

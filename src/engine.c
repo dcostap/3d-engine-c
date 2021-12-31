@@ -85,8 +85,16 @@ void draw_hor_line(Color color, int start_x, int end_x, int y)
     SDL_RenderDrawLine(renderer, start_x, y, end_x, y);
 }
 
-void draw_filled_triangle(Color color, int x1, int y1, int x2, int y2, int x3, int y3)
+void draw_filled_triangle(Color color, Triangle t)
 {
+    int x1 = t.trans_v1.x;
+    int x2 = t.trans_v2.x;
+    int x3 = t.trans_v3.x;
+
+    int y1 = t.trans_v1.y;
+    int y2 = t.trans_v2.y;
+    int y3 = t.trans_v3.y;
+
     int t1x, t2x, y, minx, maxx, t1xp, t2xp;
     bool changed1 = false;
     bool changed2 = false;
