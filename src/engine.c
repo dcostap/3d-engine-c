@@ -53,7 +53,9 @@ int init_engine(bool (*main_loop)(float delta))
                 }
 
                 current_FPS = (int) (1 / (elapsed / 1000.0f));
-                printf("FPS: %d\n", current_FPS);
+
+                printf("\rFPS: %d", current_FPS);
+                fflush(stdout);
 
                 // clamp delta if program lags too much
                 if (elapsed > 1000.0f / 25) {

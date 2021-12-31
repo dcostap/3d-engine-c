@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdbool.h>
 
+#define PI		3.14159265358979323846
+
 typedef struct Vector
 {
     float x;
@@ -22,6 +24,8 @@ typedef struct Triangle {
 
     bool is_drawn;
 } Triangle;
+
+void update_triangle_normal(Triangle *triangle);
 
 float vec_dot_product(Vector v1, Vector v2);
 void vec_cross_product(Vector v1, Vector v2, Vector *result);

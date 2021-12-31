@@ -1,5 +1,18 @@
 #include "utils_3d.h"
 
+void update_triangle_normal(Triangle *triangle)
+{
+    Vector v1v2;
+    vec_sub(triangle->v2, triangle->v1, &v1v2);
+
+    Vector v1v3;
+    vec_sub(triangle->v3, triangle->v1, &v1v3);
+
+    vec_set_unit(&v1v2);
+    vec_set_unit(&v1v3);
+    vec_cross_product(v1v2, v1v3, &triangle->normal);
+}
+
 float vec_dot_product(Vector v1, Vector v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;

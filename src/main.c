@@ -28,12 +28,14 @@ void plane_to_triangles(float v1_x, float v1_y, float v1_z,
     mesh->triangles[mesh->triangles_pos].v1 = v1;
     mesh->triangles[mesh->triangles_pos].v2 = v2;
     mesh->triangles[mesh->triangles_pos].v3 = v4;
+    update_triangle_normal(&mesh->triangles[mesh->triangles_pos]);
 
     mesh->triangles_pos++;
 
     mesh->triangles[mesh->triangles_pos].v1 = v2;
     mesh->triangles[mesh->triangles_pos].v2 = v3;
     mesh->triangles[mesh->triangles_pos].v3 = v4;
+    update_triangle_normal(&mesh->triangles[mesh->triangles_pos]);
 
     mesh->triangles_pos++;
 }
@@ -95,7 +97,7 @@ float z_far = 400;
 
 float to_radians(float degrees)
 {
-    return degrees * M_PI / 180.0f;
+    return degrees * PI / 180.0f;
 }
 
 void project_vertex(Vector *vertex)
@@ -146,16 +148,16 @@ float sin_deg(float degrees)
     return sinf(to_radians(degrees));
 }
 
-void transform_mesh(Mesh *mesh)
+void rotate_vector(Vector *vector, float rotation_x, float rotation_y, float rotation_z)
 {
-    float cosa = cos_deg(mesh->rotation.z);
-    float sina = sin_deg(mesh->rotation.z);
+    float cosa = cos_deg(rotation_z);
+    float sina = sin_deg(rotation_z);
 
-    float cosb = cos_deg(mesh->rotation.y);
-    float sinb = sin_deg(mesh->rotation.y);
+    float cosb = cos_deg(rotation_y);
+    float sinb = sin_deg(rotation_y);
 
-    float cosc = cos_deg(mesh->rotation.x);
-    float sinc = sin_deg(mesh->rotation.x);
+    float cosc = cos_deg(rotation_x);
+    float sinc = sin_deg(rotation_x);
 
     float Axx = cosa * cosb;
     float Axy = cosa * sinb * sinc - sina * cosc;
@@ -169,10 +171,21 @@ void transform_mesh(Mesh *mesh)
     float Azy = cosb * sinc;
     float Azz = cosb * cosc;
 
+    float orig_x = vector->x;
+    float orig_y = vector->y;
+    float orig_z = vector->z;
+
+    vector->x = Axx * orig_x + Axy * orig_y + Axz * orig_z;
+    vector->y = Ayx * orig_x + Ayy * orig_y + Ayz * orig_z;
+    vector->z = Azx * orig_x + Azy * orig_y + Azz * orig_z;
+}
+
+void transform_mesh(Mesh *mesh)
+{
     for (int i = 0; i < mesh->triangles_pos; i++)
     {
         Triangle *triangle = &mesh->triangles[i];
-        Vector *vertices[3][2];
+        Vector *vertices[4][2];
         vertices[0][0] = &triangle->v1;
         vertices[0][1] = &triangle->trans_v1;
 
@@ -182,17 +195,18 @@ void transform_mesh(Mesh *mesh)
         vertices[2][0] = &triangle->v3;
         vertices[2][1] = &triangle->trans_v3;
 
-        for (int v = 0; v < 3; v++)
+        vertices[3][0] = &triangle->normal;
+        vertices[3][1] = &triangle->trans_normal;
+
+        for (int v = 0; v < 4; v++)
         {
             Vector *vertex = vertices[v][0];
             Vector *transformed_vertex = vertices[v][1];
-            float px = vertex->x;
-            float py = vertex->y;
-            float pz = vertex->z;
+            transformed_vertex->x = vertex->x;
+            transformed_vertex->y = vertex->y;
+            transformed_vertex->z = vertex->z;
 
-            transformed_vertex->x = Axx * px + Axy * py + Axz * pz;
-            transformed_vertex->y = Ayx * px + Ayy * py + Ayz * pz;
-            transformed_vertex->z = Azx * px + Azy * py + Azz * pz;
+            rotate_vector(transformed_vertex, mesh->rotation.x, mesh->rotation.y, mesh->rotation.z);
 
             transformed_vertex->x += mesh->position.x;
             transformed_vertex->y += mesh->position.y;
@@ -234,17 +248,11 @@ bool main_loop(float delta)
 
     // set_pixel(10, 10, 255, 255, 255);
 
-    Color color;
-
-    color.r = 50;
-    color.g = 50;
-    color.b = 255;
-
     for (int i = 0; i < meshes_pos; i++)
     {
         Mesh *m = &meshes[i];
 
-        m->rotation.y += 270 * delta;
+        m->rotation.y += 120 * delta;
         m->position.z = 200;
 
         transform_mesh(m);
@@ -252,6 +260,18 @@ bool main_loop(float delta)
         for (int t = 0; t < m->triangles_pos; t++)
         {
             Triangle *triangle = &m->triangles[t];
+            Color color;
+
+            Vector cam;
+            cam.z = 1.0f;
+
+            float diff_to_cam = vec_dot_product(cam, triangle->trans_normal);
+
+            diff_to_cam = (diff_to_cam + 1) / 2.0f;
+
+            color.r = 255 * diff_to_cam;
+            color.g = 255 * diff_to_cam;
+            color.b = 255 * diff_to_cam;
 
             project_vertex(&triangle->trans_v1);
             project_vertex(&triangle->trans_v2);
