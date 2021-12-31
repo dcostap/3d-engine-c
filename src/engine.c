@@ -4,11 +4,13 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 const int TARGET_FPS = 60;
 
+int current_FPS = 0;
+
 SDL_Window *sdl_window;
 SDL_Surface *screen_surface;
 SDL_Renderer *renderer;
 
-int init_engine(bool (*main_loop)(void))
+int init_engine(bool (*main_loop)(float delta))
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -34,18 +36,34 @@ int init_engine(bool (*main_loop)(void))
             renderer = SDL_CreateRenderer(sdl_window, -1, 0);
 
             bool quit = false;
-            int lastTime = 0;
+            Uint64 last_time = 0;
 
             while (!quit)
             {
-                while (lastTime - SDL_GetTicks() < (1000 / TARGET_FPS))
+                double elapsed = SDL_GetTicks64() - last_time;
+
+                while ((SDL_GetTicks64() - last_time) < (1000.0f / TARGET_FPS))
                 {
                     SDL_Delay(1);
                 }
 
-                quit = main_loop();
+                if (elapsed < 1000.0f / TARGET_FPS)
+                {
+                    elapsed = 1000.0f / TARGET_FPS;
+                }
 
-                lastTime = SDL_GetTicks();
+                current_FPS = (int) (1 / (elapsed / 1000.0f));
+                printf("FPS: %d\n", current_FPS);
+
+                // clamp delta if program lags too much
+                if (elapsed > 1000.0f / 25) {
+                    elapsed = 1000.0f / 25;
+                }
+
+                last_time = SDL_GetTicks64();
+
+                quit = main_loop((float) (elapsed / 1000.0f));
+
             }
             dispose();
         }

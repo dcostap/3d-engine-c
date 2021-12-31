@@ -14,6 +14,7 @@ typedef struct Color
 extern SDL_Window *sdl_window;
 extern SDL_Surface *screen_surface;
 extern SDL_Renderer *renderer;
+extern int current_FPS;
 extern const int TARGET_FPS;
 extern const int SCREEN_WIDTH;
 extern const int SCREEN_HEIGHT;

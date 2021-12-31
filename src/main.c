@@ -1,6 +1,6 @@
 #include "engine.h"
 
-bool main_loop();
+bool main_loop(float delta);
 int main(void);
 
 typedef struct
@@ -100,33 +100,37 @@ float to_radians(float degrees)
 
 void project_vertex(Vector *vertex)
 {
-    // project from screen units to -1 -> 1
-    float aspect_ratio = SCREEN_HEIGHT / (float)SCREEN_WIDTH;
-
+    // normalize world units from -1 to 1 as seen by the camera
     vertex->x /= SCREEN_WIDTH;
     vertex->y /= SCREEN_HEIGHT;
-    vertex->z /= z_far - z_near;
-
-    // inverse tangent of half of FOV
-    float f = 1 / tanf(to_radians(fov / 2.0f));
-    float q = z_far / (z_far - z_near);
+    vertex->z = (vertex->z - z_near) / (z_far - z_near);
 
     float orig_z = vertex->z;
 
+    // project positions to 3D
+    float f = 1 / tanf(to_radians(fov / 2.0f)); // x, y become bigger on the edges of the camera / view
+    float aspect_ratio = SCREEN_HEIGHT / (float)SCREEN_WIDTH;
+
     vertex->x = aspect_ratio * f * vertex->x;
     vertex->y = f * vertex->y;
+
+    // don't really understand these but the z coord on the final trans. vertex is not used for now
+    float q = z_far / (z_far - z_near);
     vertex->z = vertex->z * (q - (q * z_near));
 
+    // further away = smaller
     if (fabs(orig_z) > 0.0001)
     {
         // printf("%.3f\n", orig_z);
         vertex->x /= orig_z;
         vertex->y /= orig_z;
     }
+
+    // go back from normalized to screen units
     vertex->x *= SCREEN_WIDTH;
     vertex->y *= SCREEN_HEIGHT;
 
-    // view is centered,
+    // center view,
     // objects at (0, 0) are in the middle if camera is in (0, 0)
     vertex->x += SCREEN_WIDTH / 2.0f;
     vertex->y += SCREEN_HEIGHT / 2.0f;
@@ -205,7 +209,7 @@ int main(void)
     return init_engine(main_loop);
 }
 
-bool main_loop()
+bool main_loop(float delta)
 {
     SDL_Event e;
 
@@ -240,7 +244,7 @@ bool main_loop()
     {
         Mesh *m = &meshes[i];
 
-        m->rotation.y += 0.5f;
+        m->rotation.y += 270 * delta;
         m->position.z = 200;
 
         transform_mesh(m);
