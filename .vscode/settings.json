@@ -23,7 +23,8 @@
         "setup.h": "c",
         "engine.h": "c",
         "utils_3d.h": "c",
-        "mario.h": "c"
+        "mario.h": "c",
+        "sdl_render.h": "c"
     },
     "files.exclude": {
         "**/include": true

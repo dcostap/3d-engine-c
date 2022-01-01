@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <SDL_render.h>
 
 #define PI		3.14159265358979323846
 
@@ -23,6 +24,10 @@ typedef struct Triangle {
     Vector trans_v1;
     Vector trans_v2;
     Vector trans_v3;
+
+    SDL_Vertex sdl_v1;
+    SDL_Vertex sdl_v2;
+    SDL_Vertex sdl_v3;
 
     Vector normal;
     Vector trans_normal;

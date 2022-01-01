@@ -95,7 +95,7 @@ float to_radians(float degrees)
     return degrees * PI / 180.0f;
 }
 
-void project_vertex(Vector *vertex)
+void project_vertex(Vector *vertex, SDL_Vertex *sdl_v)
 {
     // normalize world units from -1 to 1 as seen by the camera
     vertex->x /= SCREEN_WIDTH;
@@ -108,29 +108,29 @@ void project_vertex(Vector *vertex)
     float f = 1 / tanf(to_radians(fov / 2.0f)); // x, y become bigger on the edges of the camera / view
     float aspect_ratio = SCREEN_HEIGHT / (float)SCREEN_WIDTH;
 
-    vertex->x = aspect_ratio * f * vertex->x;
-    vertex->y = f * vertex->y;
+    sdl_v->position.x = aspect_ratio * f * vertex->x;
+    sdl_v->position.y = f * vertex->y;
 
     // don't really understand these but the z coord on the final trans. vertex is not used for now
-    float q = z_far / (z_far - z_near);
-    vertex->z = vertex->z * (q - (q * z_near));
+    // float q = z_far / (z_far - z_near);
+    // vertex->z = vertex->z * (q - (q * z_near));
 
     // further away = smaller
     if (fabs(orig_z) > 0.0001) // avoid divide by 0
     {
         // printf("%.3f\n", orig_z);
-        vertex->x /= orig_z;
-        vertex->y /= orig_z;
+        sdl_v->position.x /= orig_z;
+        sdl_v->position.y /= orig_z;
     }
 
     // go back from normalized to screen units
-    vertex->x *= SCREEN_WIDTH;
-    vertex->y *= SCREEN_HEIGHT;
+    sdl_v->position.x *= SCREEN_WIDTH;
+    sdl_v->position.y *= SCREEN_HEIGHT;
 
     // center view,
     // objects at (0, 0) are in the middle if camera is in (0, 0)
-    vertex->x += SCREEN_WIDTH / 2.0f;
-    vertex->y += SCREEN_HEIGHT / 2.0f;
+    sdl_v->position.x += SCREEN_WIDTH / 2.0f;
+    sdl_v->position.y += SCREEN_HEIGHT / 2.0f;
 }
 
 float cos_deg(float degrees)
@@ -246,14 +246,14 @@ int main(void)
     // printf("%", sizeof(Triangle));
     // make_cube(70, &meshes[meshes_pos++]);
 
-    for (int i = 0; i < 1000; i++)
+    // almost 100k triangles
+    for (int i = 0; i < 120; i++)
     {
         meshes[meshes_pos++] = mario;
         meshes[meshes_pos - 1].position.x = 50 - (rand() % 100);
         meshes[meshes_pos - 1].position.y = 50 - (rand() % 100);
         meshes[meshes_pos - 1].position.z = 50 - (rand() % 100);
     }
-
 
     return init_engine(main_loop);
 }
@@ -309,7 +309,7 @@ bool main_loop(float delta)
         for (int t = 0; t < m->triangles_pos; t++)
         {
             Triangle *triangle = &m->triangles[t];
-            Color color;
+            SDL_Color color;
 
             Vector cam;
             cam.z = 1.0f;
@@ -322,11 +322,20 @@ bool main_loop(float delta)
                 color.g = 255 * diff_to_cam * -1;
                 color.b = 255 * diff_to_cam * -1;
 
-                project_vertex(&triangle->trans_v1);
-                project_vertex(&triangle->trans_v2);
-                project_vertex(&triangle->trans_v3);
+                project_vertex(&triangle->trans_v1, &triangle->sdl_v1);
+                project_vertex(&triangle->trans_v2, &triangle->sdl_v2);
+                project_vertex(&triangle->trans_v3, &triangle->sdl_v3);
 
-                draw_filled_triangle(color, *triangle);
+                triangle->sdl_v1.color = color;
+                triangle->sdl_v2.color = color;
+                triangle->sdl_v3.color = color;
+
+                SDL_Vertex list[] = {
+                    triangle->sdl_v1,
+                    triangle->sdl_v2,
+                    triangle->sdl_v3};
+
+                SDL_RenderGeometry(renderer, NULL, &list, 3, NULL, 0);
             }
         }
     }

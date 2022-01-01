@@ -36,7 +36,7 @@ int init_engine(bool (*main_loop)(float delta))
         {
             depth_buffer = malloc(sizeof(float) * SCREEN_WIDTH * SCREEN_HEIGHT);
             screen_surface = SDL_GetWindowSurface(sdl_window);
-            renderer = SDL_CreateRenderer(sdl_window, -1, 0);
+            renderer = SDL_CreateRenderer(sdl_window, -1, SDL_RENDERER_ACCELERATED);
 
             bool quit = false;
             Uint64 last_time = 0;
