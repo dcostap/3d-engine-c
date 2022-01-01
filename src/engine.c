@@ -111,6 +111,12 @@ void draw_hor_line(Color color, int start_x, int end_x, int y, float z)
 {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 
+    if (start_x < 0) start_x = 0;
+    if (start_x >= SCREEN_WIDTH) start_x = SCREEN_WIDTH - 1;
+    if (end_x >= SCREEN_WIDTH) end_x = SCREEN_WIDTH - 1;
+    if (y < 0) y = 0;
+    if (y >= SCREEN_HEIGHT) y = SCREEN_HEIGHT - 1;
+
     for (int x = start_x; x < end_x; x++)
     {
         int pixel_pos = (x % SCREEN_WIDTH) + y * SCREEN_WIDTH;

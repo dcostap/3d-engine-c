@@ -219,6 +219,30 @@ int main(void)
     // make_cube(70, &meshes[meshes_pos++]);
 
     meshes[meshes_pos++] = mario;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = 50;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = 50;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = 11;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.y = 11;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = 22;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = 12;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = 55;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.y = 50;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.z = 33;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = 22;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.x = -33;
+    meshes[meshes_pos++] = mario;
+    meshes[meshes_pos - 1].position.y = -44;
 
     return init_engine(main_loop);
 }
@@ -265,8 +289,8 @@ bool main_loop(float delta)
         Mesh *m = &meshes[i];
 
         m->position.z = 50;
-        // m->rotation.y += 100 * delta;
-        // m->rotation.x += 100 * delta;
+        m->rotation.y += 100 * delta;
+        m->rotation.x += 100 * delta;
 
         transform_mesh(m);
 
