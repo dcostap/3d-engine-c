@@ -22,7 +22,8 @@
         "cstdlib": "c",
         "setup.h": "c",
         "engine.h": "c",
-        "utils_3d.h": "c"
+        "utils_3d.h": "c",
+        "mario.h": "c"
     },
     "files.exclude": {
         "**/include": true

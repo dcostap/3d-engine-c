@@ -1,15 +1,9 @@
 #include "engine.h"
+#include "assets/mario.h"
 
 bool main_loop(float delta);
 int main(void);
-
-typedef struct
-{
-    Triangle triangles[100];
-    int triangles_pos;
-    Vector rotation;
-    Vector position;
-} Mesh;
+void clear(void);
 
 Mesh meshes[100] = {0};
 int meshes_pos = 0;
@@ -208,19 +202,37 @@ void transform_mesh(Mesh *mesh)
 
             rotate_vector(transformed_vertex, mesh->rotation.x, mesh->rotation.y, mesh->rotation.z);
 
-            transformed_vertex->x += mesh->position.x;
-            transformed_vertex->y += mesh->position.y;
-            transformed_vertex->z += mesh->position.z;
+            if (transformed_vertex != &triangle->trans_normal)
+            {
+                transformed_vertex->x += mesh->position.x;
+                transformed_vertex->y += mesh->position.y;
+                transformed_vertex->z += mesh->position.z;
+            }
         }
     }
 }
 
 int main(void)
 {
-    make_cube(70, &meshes[meshes_pos]);
-    meshes_pos++;
+
+    // printf("%", sizeof(Triangle));
+    // make_cube(70, &meshes[meshes_pos++]);
+
+    meshes[meshes_pos++] = mario;
 
     return init_engine(main_loop);
+}
+
+void clear(void)
+{
+    SDL_RenderClear(renderer);
+    for (int x = 0; x < SCREEN_WIDTH; x++)
+    {
+        for (int y = 0; y < SCREEN_HEIGHT; y++)
+        {
+            depth_buffer[(x % SCREEN_WIDTH) + y * SCREEN_WIDTH] = 0;
+        }
+    }
 }
 
 bool main_loop(float delta)
@@ -244,7 +256,7 @@ bool main_loop(float delta)
     }
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+    clear();
 
     // set_pixel(10, 10, 255, 255, 255);
 
@@ -252,11 +264,13 @@ bool main_loop(float delta)
     {
         Mesh *m = &meshes[i];
 
-        m->rotation.y += 120 * delta;
-        m->position.z = 200;
+        m->position.z = 50;
+        // m->rotation.y += 100 * delta;
+        // m->rotation.x += 100 * delta;
 
         transform_mesh(m);
 
+        // printf("%.2f\n", m->triangles[1].trans_v3.y);
         for (int t = 0; t < m->triangles_pos; t++)
         {
             Triangle *triangle = &m->triangles[t];
@@ -267,17 +281,18 @@ bool main_loop(float delta)
 
             float diff_to_cam = vec_dot_product(cam, triangle->trans_normal);
 
-            diff_to_cam = (diff_to_cam + 1) / 2.0f;
+            if (diff_to_cam < 0.0f) // backface culling
+            {
+                color.r = 255 * diff_to_cam * -1;
+                color.g = 255 * diff_to_cam * -1;
+                color.b = 255 * diff_to_cam * -1;
 
-            color.r = 255 * diff_to_cam;
-            color.g = 255 * diff_to_cam;
-            color.b = 255 * diff_to_cam;
+                project_vertex(&triangle->trans_v1);
+                project_vertex(&triangle->trans_v2);
+                project_vertex(&triangle->trans_v3);
 
-            project_vertex(&triangle->trans_v1);
-            project_vertex(&triangle->trans_v2);
-            project_vertex(&triangle->trans_v3);
-
-            draw_filled_triangle(color, *triangle);
+                draw_filled_triangle(color, *triangle);
+            }
         }
     }
 

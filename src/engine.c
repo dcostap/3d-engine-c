@@ -10,6 +10,8 @@ SDL_Window *sdl_window;
 SDL_Surface *screen_surface;
 SDL_Renderer *renderer;
 
+float *depth_buffer;
+
 int init_engine(bool (*main_loop)(float delta))
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -32,11 +34,13 @@ int init_engine(bool (*main_loop)(float delta))
         }
         else
         {
+            depth_buffer = malloc(sizeof(float) * SCREEN_WIDTH * SCREEN_HEIGHT);
             screen_surface = SDL_GetWindowSurface(sdl_window);
             renderer = SDL_CreateRenderer(sdl_window, -1, 0);
 
             bool quit = false;
             Uint64 last_time = 0;
+            int last_current_FPS;
 
             while (!quit)
             {
@@ -52,20 +56,24 @@ int init_engine(bool (*main_loop)(float delta))
                     elapsed = 1000.0f / TARGET_FPS;
                 }
 
-                current_FPS = (int) (1 / (elapsed / 1000.0f));
+                current_FPS = (int)(1 / (elapsed / 1000.0f));
 
-                printf("\rFPS: %d", current_FPS);
-                fflush(stdout);
+                if (current_FPS != last_current_FPS)
+                {
+                    printf("FPS: %d\n", current_FPS);
+                    fflush(stdout);
+                }
+                last_current_FPS = current_FPS;
 
                 // clamp delta if program lags too much
-                if (elapsed > 1000.0f / 25) {
+                if (elapsed > 1000.0f / 25)
+                {
                     elapsed = 1000.0f / 25;
                 }
 
                 last_time = SDL_GetTicks64();
 
-                quit = main_loop((float) (elapsed / 1000.0f));
-
+                quit = main_loop((float)(elapsed / 1000.0f));
             }
             dispose();
         }
@@ -99,10 +107,19 @@ void swap(int *x, int *y)
     *y = t;
 }
 
-void draw_hor_line(Color color, int start_x, int end_x, int y)
+void draw_hor_line(Color color, int start_x, int end_x, int y, float z)
 {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderDrawLine(renderer, start_x, y, end_x, y);
+
+    for (int x = start_x; x < end_x; x++)
+    {
+        int pixel_pos = (x % SCREEN_WIDTH) + y * SCREEN_WIDTH;
+        if (depth_buffer[pixel_pos] == 0 || depth_buffer[pixel_pos] < z)
+        {
+            depth_buffer[pixel_pos] = z;
+            SDL_RenderDrawPoint(renderer, x, y);
+        }
+    }
 }
 
 void draw_filled_triangle(Color color, Triangle t)
@@ -114,6 +131,8 @@ void draw_filled_triangle(Color color, Triangle t)
     int y1 = t.trans_v1.y;
     int y2 = t.trans_v2.y;
     int y3 = t.trans_v3.y;
+
+    float z_avg = (t.trans_v1.z + t.trans_v2.z + t.trans_v3.z) / 3;
 
     int t1x, t2x, y, minx, maxx, t1xp, t2xp;
     bool changed1 = false;
@@ -236,8 +255,8 @@ void draw_filled_triangle(Color color, Triangle t)
             maxx = t1x;
         if (maxx < t2x)
             maxx = t2x;
-        draw_hor_line(color, minx, maxx, y); // Draw line from min to max points found on the y
-                                             // Now increase y
+        draw_hor_line(color, minx, maxx, y, z_avg); // Draw line from min to max points found on the y
+                                                    // Now increase y
         if (!changed1)
             t1x += signx1;
         t1x += t1xp;
@@ -335,7 +354,7 @@ next:
             maxx = t1x;
         if (maxx < t2x)
             maxx = t2x;
-        draw_hor_line(color, minx, maxx, y);
+        draw_hor_line(color, minx, maxx, y, z_avg);
         if (!changed1)
             t1x += signx1;
         t1x += t1xp;
