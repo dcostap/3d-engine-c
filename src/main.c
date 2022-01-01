@@ -1,11 +1,12 @@
 #include "engine.h"
 #include "assets/mario.h"
+#include <math.h>
 
 bool main_loop(float delta);
 int main(void);
 void clear(void);
 
-Mesh meshes[100] = {0};
+Mesh meshes[1000] = {0};
 int meshes_pos = 0;
 
 void plane_to_triangles(float v1_x, float v1_y, float v1_z,
@@ -176,6 +177,27 @@ void rotate_vector(Vector *vector, float rotation_x, float rotation_y, float rot
 
 void transform_mesh(Mesh *mesh)
 {
+    float cosa = cos_deg(mesh->rotation.z);
+    float sina = sin_deg(mesh->rotation.z);
+
+    float cosb = cos_deg(mesh->rotation.y);
+    float sinb = sin_deg(mesh->rotation.y);
+
+    float cosc = cos_deg(mesh->rotation.x);
+    float sinc = sin_deg(mesh->rotation.x);
+
+    float Axx = cosa * cosb;
+    float Axy = cosa * sinb * sinc - sina * cosc;
+    float Axz = cosa * sinb * cosc + sina * sinc;
+
+    float Ayx = sina * cosb;
+    float Ayy = sina * sinb * sinc + cosa * cosc;
+    float Ayz = sina * sinb * cosc - cosa * sinc;
+
+    float Azx = -sinb;
+    float Azy = cosb * sinc;
+    float Azz = cosb * cosc;
+
     for (int i = 0; i < mesh->triangles_pos; i++)
     {
         Triangle *triangle = &mesh->triangles[i];
@@ -200,7 +222,13 @@ void transform_mesh(Mesh *mesh)
             transformed_vertex->y = vertex->y;
             transformed_vertex->z = vertex->z;
 
-            rotate_vector(transformed_vertex, mesh->rotation.x, mesh->rotation.y, mesh->rotation.z);
+            float orig_x = transformed_vertex->x;
+            float orig_y = transformed_vertex->y;
+            float orig_z = transformed_vertex->z;
+
+            transformed_vertex->x = Axx * orig_x + Axy * orig_y + Axz * orig_z;
+            transformed_vertex->y = Ayx * orig_x + Ayy * orig_y + Ayz * orig_z;
+            transformed_vertex->z = Azx * orig_x + Azy * orig_y + Azz * orig_z;
 
             if (transformed_vertex != &triangle->trans_normal)
             {
@@ -218,31 +246,14 @@ int main(void)
     // printf("%", sizeof(Triangle));
     // make_cube(70, &meshes[meshes_pos++]);
 
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = 50;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = 50;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = 11;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.y = 11;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = 22;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = 12;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = 55;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.y = 50;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.z = 33;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = 22;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.x = -33;
-    meshes[meshes_pos++] = mario;
-    meshes[meshes_pos - 1].position.y = -44;
+    for (int i = 0; i < 1000; i++)
+    {
+        meshes[meshes_pos++] = mario;
+        meshes[meshes_pos - 1].position.x = 50 - (rand() % 100);
+        meshes[meshes_pos - 1].position.y = 50 - (rand() % 100);
+        meshes[meshes_pos - 1].position.z = 50 - (rand() % 100);
+    }
+
 
     return init_engine(main_loop);
 }

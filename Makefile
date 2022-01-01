@@ -4,7 +4,7 @@ INCLUDES = -Iinclude -Iinclude/SDL/include -Iinclude/SDL2_gfx
 # LIBS = -Llibs -lSDL2
 LIBS = -Llibs -lSDL2 -lm
 
-CFLAGS = -Wall -Wextra -g -std=c99 -pedantic -Wno-unused-parameter
+CFLAGS = -Wall -Wextra -pg -std=c99 -pedantic -Wno-unused-parameter
 
 # For windows (WSL)
 # CC = x86_64-w64-mingw32-gcc
