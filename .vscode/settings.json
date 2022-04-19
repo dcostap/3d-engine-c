@@ -24,9 +24,19 @@
         "engine.h": "c",
         "utils_3d.h": "c",
         "mario.h": "c",
-        "sdl_render.h": "c"
+        "sdl_render.h": "c",
+        "stdio.h": "c",
+        "sdl_endian.h": "c",
+        "sdl_audio.h": "c"
     },
-    "files.exclude": {
-        "**/include": true
-    }
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/mnt/c/Users/Dario Costa/Desktop/random_projects/c-3d-engine/build",
+            "binaryPath": "/mnt/c/Users/Dario Costa/Desktop/random_projects/c-3d-engine/build/app",
+            "binaryArgs": []
+        }
+    ],
+    // "files.exclude": {
+    //     "**/include": true
+    // }
 }

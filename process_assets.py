@@ -94,7 +94,7 @@ def process_obj_file(file):
     with open("./src/assets/" + filename_no_extension + ".h", "w") as c_file:
         c_file.write(
 f"""\
-# include "../utils_3d.h"
+#include "../utils_3d.h"
 
 extern Mesh {filename_no_extension};
 """
@@ -103,7 +103,7 @@ extern Mesh {filename_no_extension};
     with open("./src/assets/" + filename_no_extension + ".c", "w") as c_file:
         c_file.write(
 f"""\
-# include "mario.h"
+#include "mario.h"
 
 Mesh {filename_no_extension} = {{
     .triangles = {{

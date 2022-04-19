@@ -1,0 +1,5 @@
+make build/app --dry-run --keep-going --print-directory
+make: Entering directory '/mnt/c/Users/Dario Costa/Desktop/random_projects/c-3d-engine'
+make: 'build/app' is up to date.
+make: Leaving directory '/mnt/c/Users/Dario Costa/Desktop/random_projects/c-3d-engine'
+ 

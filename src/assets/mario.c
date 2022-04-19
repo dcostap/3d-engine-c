@@ -1,4 +1,4 @@
-# include "mario.h"
+#include "mario.h"
 
 Mesh mario = {
     .triangles = {
