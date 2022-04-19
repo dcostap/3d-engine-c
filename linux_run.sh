@@ -1,0 +1,1 @@
+make && open ./build/app

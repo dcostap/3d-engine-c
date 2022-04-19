@@ -1,16 +1,15 @@
 INCLUDES = -Iinclude -Iinclude/SDL/include -Iinclude/SDL2_gfx
 
-# Windows (WSL)
-LIBS = -Llibs -lSDL2
-
-# Linux
-# LIBS = -Llibs -lSDL2 -lm
-
 CFLAGS = -Wall -Wextra -pg -std=c99 -pedantic -Wno-unused-parameter
 
 # Windows (WSL)
-CC = x86_64-w64-mingw32-gcc
+LIBS = -lSDL2 -lopengl32
+# Linux
+# LIBS = -lSDL2 -lm -lGL
 
+# Windows (WSL)
+CC = x86_64-w64-mingw32-gcc
+# Linux
 # CC = gcc
 
 build/app: $(wildcard src/*.c) $(wildcard src/assets/*.c)

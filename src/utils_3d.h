@@ -51,4 +51,6 @@ void vec_sub(Vector v1, Vector v2, Vector *result);
 void vec_set_unit(Vector *v);
 float get_length(Vector v);
 
+void swap(int *x, int *y);
+
 #endif

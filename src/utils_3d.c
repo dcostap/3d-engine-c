@@ -1,5 +1,12 @@
 #include "utils_3d.h"
 
+void swap(int *x, int *y)
+{
+    int t = *x;
+    *x = *y;
+    *y = t;
+}
+
 void update_triangle_normal(Triangle *triangle)
 {
     Vector v1v2;

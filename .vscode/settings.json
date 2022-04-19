@@ -27,7 +27,11 @@
         "sdl_render.h": "c",
         "stdio.h": "c",
         "sdl_endian.h": "c",
-        "sdl_audio.h": "c"
+        "sdl_audio.h": "c",
+        "sdl_opengl.h": "c",
+        "common.h": "c",
+        "sdl_opengles.h": "c",
+        "glext.h": "c"
     },
     "makefile.launchConfigurations": [
         {
@@ -36,7 +40,7 @@
             "binaryArgs": []
         }
     ],
-    // "files.exclude": {
-    //     "**/include": true
-    // }
+    "search.exclude": {
+        "**/include": true
+    }
 }

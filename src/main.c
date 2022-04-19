@@ -247,7 +247,7 @@ int main(void)
     // make_cube(70, &meshes[meshes_pos++]);
 
     // almost 100k triangles
-    for (int i = 0; i < 120; i++)
+    for (int i = 0; i < 25; i++)
     {
         meshes[meshes_pos++] = mario;
         meshes[meshes_pos - 1].position.x = 50 - (rand() % 100);
@@ -265,7 +265,7 @@ void clear(void)
     {
         for (int y = 0; y < SCREEN_HEIGHT; y++)
         {
-            depth_buffer[(x % SCREEN_WIDTH) + y * SCREEN_WIDTH] = 0;
+            // depth_buffer[(x % SCREEN_WIDTH) + y * SCREEN_WIDTH] = 0;
         }
     }
 }
@@ -335,7 +335,7 @@ bool main_loop(float delta)
                     triangle->sdl_v2,
                     triangle->sdl_v3};
 
-                SDL_RenderGeometry(renderer, NULL, &list, 3, NULL, 0);
+                // SDL_RenderGeometry(renderer, NULL, &list, 3, NULL, 0);
             }
         }
     }
