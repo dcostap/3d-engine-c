@@ -16,41 +16,15 @@ typedef struct Vector
     float z;
 } Vector;
 
-typedef struct Triangle {
-    Vector v1;
-    Vector v2;
-    Vector v3;
-
-    Vector trans_v1;
-    Vector trans_v2;
-    Vector trans_v3;
-
-    SDL_Vertex sdl_v1;
-    SDL_Vertex sdl_v2;
-    SDL_Vertex sdl_v3;
-
-    Vector normal;
-    Vector trans_normal;
-
-    bool is_drawn;
-} Triangle;
-
-typedef struct
-{
-    Triangle triangles[1000];
-    int triangles_pos;
-    Vector rotation;
-    Vector position;
-} Mesh;
-
-void update_triangle_normal(Triangle *triangle);
-
 float vec_dot_product(Vector v1, Vector v2);
 void vec_cross_product(Vector v1, Vector v2, Vector *result);
 void vec_sub(Vector v1, Vector v2, Vector *result);
 void vec_set_unit(Vector *v);
 float get_length(Vector v);
 
+float to_radians(float degrees);
 void swap(int *x, int *y);
+float cos_deg(float degrees);
+float sin_deg(float degrees);
 
 #endif

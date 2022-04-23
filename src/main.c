@@ -1,279 +1,54 @@
 #include "engine.h"
 #include "assets/mario.h"
 #include <math.h>
+// #include "test.c"
 
 bool main_loop(float delta);
 int main(void);
-void clear(void);
+bool init_shaders();
 
-Mesh meshes[1000] = {0};
-int meshes_pos = 0;
+GLuint gl_shader_program;
 
-void plane_to_triangles(float v1_x, float v1_y, float v1_z,
-                        float v2_x, float v2_y, float v2_z,
-                        float v3_x, float v3_y, float v3_z,
-                        float v4_x, float v4_y, float v4_z,
-                        Mesh *mesh)
+typedef struct Mesh
 {
-    Vector v1 = {.x = v1_x, .y = v1_y, .z = v1_z};
-    Vector v2 = {.x = v2_x, .y = v2_y, .z = v2_z};
-    Vector v3 = {.x = v3_x, .y = v3_y, .z = v3_z};
-    Vector v4 = {.x = v4_x, .y = v4_y, .z = v4_z};
+    GLuint vao, vbo, ebo;
+    float vertices[6][3];
+    int vertices_size;
+    int indices[6];
+    int indices_size;
+} Mesh;
 
-    mesh->triangles[mesh->triangles_pos].v1 = v1;
-    mesh->triangles[mesh->triangles_pos].v2 = v2;
-    mesh->triangles[mesh->triangles_pos].v3 = v4;
-    update_triangle_normal(&mesh->triangles[mesh->triangles_pos]);
-
-    mesh->triangles_pos++;
-
-    mesh->triangles[mesh->triangles_pos].v1 = v2;
-    mesh->triangles[mesh->triangles_pos].v2 = v3;
-    mesh->triangles[mesh->triangles_pos].v3 = v4;
-    update_triangle_normal(&mesh->triangles[mesh->triangles_pos]);
-
-    mesh->triangles_pos++;
-}
-
-void make_cube(float size, Mesh *mesh)
-{
-    mesh->triangles_pos = 0;
-
-    // front face
-    plane_to_triangles(
-        0, 0, 0,
-        0, size, 0,
-        size, size, 0,
-        size, 0, 0,
-        mesh);
-
-    // back face
-    plane_to_triangles(
-        0, 0, size,
-        size, 0, size,
-        size, size, size,
-        0, size, size,
-        mesh);
-
-    // // right face
-    plane_to_triangles(
-        size, 0, 0,
-        size, size, 0,
-        size, size, size,
-        size, 0, size,
-        mesh);
-    // // left face
-    plane_to_triangles(
-        0, 0, 0,
-        0, 0, size,
-        0, size, size,
-        0, size, 0,
-        mesh);
-
-    // // top face
-    plane_to_triangles(
-        0, size, 0,
-        0, size, size,
-        size, size, size,
-        size, size, 0,
-        mesh);
-    // // bottom face
-    plane_to_triangles(
-        0, 0, 0,
-        size, 0, 0,
-        size, 0, size,
-        0, 0, size,
-        mesh);
-}
-
-float fov = 90;
-float z_near = 10;
-float z_far = 400;
-
-float to_radians(float degrees)
-{
-    return degrees * PI / 180.0f;
-}
-
-void project_vertex(Vector *vertex, SDL_Vertex *sdl_v)
-{
-    // normalize world units from -1 to 1 as seen by the camera
-    vertex->x /= SCREEN_WIDTH;
-    vertex->y /= SCREEN_HEIGHT;
-    vertex->z = (vertex->z - z_near) / (z_far - z_near);
-
-    float orig_z = vertex->z;
-
-    // project positions to 3D
-    float f = 1 / tanf(to_radians(fov / 2.0f)); // x, y become bigger on the edges of the camera / view
-    float aspect_ratio = SCREEN_HEIGHT / (float)SCREEN_WIDTH;
-
-    sdl_v->position.x = aspect_ratio * f * vertex->x;
-    sdl_v->position.y = f * vertex->y;
-
-    // don't really understand these but the z coord on the final trans. vertex is not used for now
-    // float q = z_far / (z_far - z_near);
-    // vertex->z = vertex->z * (q - (q * z_near));
-
-    // further away = smaller
-    if (fabs(orig_z) > 0.0001) // avoid divide by 0
-    {
-        // printf("%.3f\n", orig_z);
-        sdl_v->position.x /= orig_z;
-        sdl_v->position.y /= orig_z;
-    }
-
-    // go back from normalized to screen units
-    sdl_v->position.x *= SCREEN_WIDTH;
-    sdl_v->position.y *= SCREEN_HEIGHT;
-
-    // center view,
-    // objects at (0, 0) are in the middle if camera is in (0, 0)
-    sdl_v->position.x += SCREEN_WIDTH / 2.0f;
-    sdl_v->position.y += SCREEN_HEIGHT / 2.0f;
-}
-
-float cos_deg(float degrees)
-{
-    return cosf(to_radians(degrees));
-}
-
-float sin_deg(float degrees)
-{
-    return sinf(to_radians(degrees));
-}
-
-void rotate_vector(Vector *vector, float rotation_x, float rotation_y, float rotation_z)
-{
-    float cosa = cos_deg(rotation_z);
-    float sina = sin_deg(rotation_z);
-
-    float cosb = cos_deg(rotation_y);
-    float sinb = sin_deg(rotation_y);
-
-    float cosc = cos_deg(rotation_x);
-    float sinc = sin_deg(rotation_x);
-
-    float Axx = cosa * cosb;
-    float Axy = cosa * sinb * sinc - sina * cosc;
-    float Axz = cosa * sinb * cosc + sina * sinc;
-
-    float Ayx = sina * cosb;
-    float Ayy = sina * sinb * sinc + cosa * cosc;
-    float Ayz = sina * sinb * cosc - cosa * sinc;
-
-    float Azx = -sinb;
-    float Azy = cosb * sinc;
-    float Azz = cosb * cosc;
-
-    float orig_x = vector->x;
-    float orig_y = vector->y;
-    float orig_z = vector->z;
-
-    vector->x = Axx * orig_x + Axy * orig_y + Axz * orig_z;
-    vector->y = Ayx * orig_x + Ayy * orig_y + Ayz * orig_z;
-    vector->z = Azx * orig_x + Azy * orig_y + Azz * orig_z;
-}
-
-void transform_mesh(Mesh *mesh)
-{
-    float cosa = cos_deg(mesh->rotation.z);
-    float sina = sin_deg(mesh->rotation.z);
-
-    float cosb = cos_deg(mesh->rotation.y);
-    float sinb = sin_deg(mesh->rotation.y);
-
-    float cosc = cos_deg(mesh->rotation.x);
-    float sinc = sin_deg(mesh->rotation.x);
-
-    float Axx = cosa * cosb;
-    float Axy = cosa * sinb * sinc - sina * cosc;
-    float Axz = cosa * sinb * cosc + sina * sinc;
-
-    float Ayx = sina * cosb;
-    float Ayy = sina * sinb * sinc + cosa * cosc;
-    float Ayz = sina * sinb * cosc - cosa * sinc;
-
-    float Azx = -sinb;
-    float Azy = cosb * sinc;
-    float Azz = cosb * cosc;
-
-    for (int i = 0; i < mesh->triangles_pos; i++)
-    {
-        Triangle *triangle = &mesh->triangles[i];
-        Vector *vertices[4][2];
-        vertices[0][0] = &triangle->v1;
-        vertices[0][1] = &triangle->trans_v1;
-
-        vertices[1][0] = &triangle->v2;
-        vertices[1][1] = &triangle->trans_v2;
-
-        vertices[2][0] = &triangle->v3;
-        vertices[2][1] = &triangle->trans_v3;
-
-        vertices[3][0] = &triangle->normal;
-        vertices[3][1] = &triangle->trans_normal;
-
-        for (int v = 0; v < 4; v++)
-        {
-            Vector *vertex = vertices[v][0];
-            Vector *transformed_vertex = vertices[v][1];
-            transformed_vertex->x = vertex->x;
-            transformed_vertex->y = vertex->y;
-            transformed_vertex->z = vertex->z;
-
-            float orig_x = transformed_vertex->x;
-            float orig_y = transformed_vertex->y;
-            float orig_z = transformed_vertex->z;
-
-            transformed_vertex->x = Axx * orig_x + Axy * orig_y + Axz * orig_z;
-            transformed_vertex->y = Ayx * orig_x + Ayy * orig_y + Ayz * orig_z;
-            transformed_vertex->z = Azx * orig_x + Azy * orig_y + Azz * orig_z;
-
-            if (transformed_vertex != &triangle->trans_normal)
-            {
-                transformed_vertex->x += mesh->position.x;
-                transformed_vertex->y += mesh->position.y;
-                transformed_vertex->z += mesh->position.z;
-            }
-        }
-    }
-}
+Mesh mesh = {
+    .vertices = {{-0.5f, -0.7f, 0.0f, 1.0f},
+                 {-1.0f, 0.0f, 0.0f, 0.0f},
+                 {1.0f, 1.0f, 1.0f, 0.0f},
+                 {1.0f, -1.0f, 1.0f, 1.0f}},
+    .vertices_size = 4,
+    .indices = {0, 1, 2, 0, 2, 3},
+    .indices_size = 6};
 
 int main(void)
 {
-
-    // printf("%", sizeof(Triangle));
-    // make_cube(70, &meshes[meshes_pos++]);
-
-    // almost 100k triangles
-    for (int i = 0; i < 25; i++)
-    {
-        meshes[meshes_pos++] = mario;
-        meshes[meshes_pos - 1].position.x = 50 - (rand() % 100);
-        meshes[meshes_pos - 1].position.y = 50 - (rand() % 100);
-        meshes[meshes_pos - 1].position.z = 50 - (rand() % 100);
-    }
-
     return init_engine(main_loop);
+    // return main_test();
 }
 
-void clear(void)
-{
-    SDL_RenderClear(renderer);
-    for (int x = 0; x < SCREEN_WIDTH; x++)
-    {
-        for (int y = 0; y < SCREEN_HEIGHT; y++)
-        {
-            // depth_buffer[(x % SCREEN_WIDTH) + y * SCREEN_WIDTH] = 0;
-        }
-    }
-}
+static bool is_first_loop = true;
 
 bool main_loop(float delta)
 {
-    SDL_Event e;
+    if (is_first_loop)
+    {
+        is_first_loop = false;
+        if (!init_shaders())
+        {
+            return true;
+        }
 
+        init_mesh(&mesh);
+    }
+
+    SDL_Event e;
     while (SDL_PollEvent(&e))
     {
         if (e.type == SDL_QUIT)
@@ -290,57 +65,138 @@ bool main_loop(float delta)
         }
     }
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    clear();
+    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    // set_pixel(10, 10, 255, 255, 255);
+    // glEnable(GL_DEPTH_TEST);
+    glClearColor(0.3f, 0.2f, 0.5f, 0.f);
+    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-    for (int i = 0; i < meshes_pos; i++)
-    {
-        Mesh *m = &meshes[i];
+    draw_mesh(&mesh);
 
-        m->position.z = 50;
-        m->rotation.y += 100 * delta;
-        m->rotation.x += 100 * delta;
+    // glClearColor(0.3f, 0.2f, 0.5f, 0.f);
+    // glClear(GL_COLOR_BUFFER_BIT);
 
-        transform_mesh(m);
+    // glBegin(GL_TRIANGLES);
+    // glColor3f(1, 0, 0);
+    // glVertex3f(-0.6, -0.75, 0.5);
+    // glColor3f(0, 1, 0);
+    // glVertex3f(0.6, -0.75, 0);
+    // glColor3f(0, 0, 1);
+    // glVertex3f(0, 0.75, 0);
+    // glEnd();
 
-        // printf("%.2f\n", m->triangles[1].trans_v3.y);
-        for (int t = 0; t < m->triangles_pos; t++)
-        {
-            Triangle *triangle = &m->triangles[t];
-            SDL_Color color;
-
-            Vector cam;
-            cam.z = 1.0f;
-
-            float diff_to_cam = vec_dot_product(cam, triangle->trans_normal);
-
-            if (diff_to_cam < 0.0f) // backface culling
-            {
-                color.r = 255 * diff_to_cam * -1;
-                color.g = 255 * diff_to_cam * -1;
-                color.b = 255 * diff_to_cam * -1;
-
-                project_vertex(&triangle->trans_v1, &triangle->sdl_v1);
-                project_vertex(&triangle->trans_v2, &triangle->sdl_v2);
-                project_vertex(&triangle->trans_v3, &triangle->sdl_v3);
-
-                triangle->sdl_v1.color = color;
-                triangle->sdl_v2.color = color;
-                triangle->sdl_v3.color = color;
-
-                SDL_Vertex list[] = {
-                    triangle->sdl_v1,
-                    triangle->sdl_v2,
-                    triangle->sdl_v3};
-
-                // SDL_RenderGeometry(renderer, NULL, &list, 3, NULL, 0);
-            }
-        }
-    }
-
-    SDL_RenderPresent(renderer);
+    SDL_GL_SwapWindow(sdl_window);
 
     return false;
+}
+
+static const char *vert_shader = "\
+#version 400 core                                                                                       \n\
+                                                                                                        \n\
+in vec3 in_position;                                                                                       \n\
+                                                                                                        \n\
+void main(void) {                                                                                       \n\
+    gl_Position = vec4(in_position.x, in_position.y, 0.0, 1.0);                                                  \n\
+}                                                                                                       \n\
+";
+
+static const char *frag_shader = "\
+#version 400 core                                                              \n\
+                                                                               \n\
+out vec4 out_color;                                                          \n\
+                                                                               \n\
+void main(void) {                                                              \n\
+    out_color = vec4(1.0, 0.0, 0.0, 1.0);                                      \n\
+}                                                                              \n\
+";
+
+const GLfloat verts[6][4] = {
+    //  x      y      s      t
+    {-0.5f, -0.7f, 0.0f, 1.0f}, // BL
+    {-1.0f, 0.0f, 0.0f, 0.0f},  // TL
+    {1.0f, 1.0f, 1.0f, 0.0f},   // TR
+    {1.0f, -1.0f, 1.0f, 1.0f},  // BR
+};
+
+const GLint indicies[] = {
+    0, 1, 2, 0, 2, 3};
+
+void init_mesh(Mesh *mesh)
+{
+    printf("%d", sizeof(mesh->vertices));
+    // Populate vertex buffer
+    glGenBuffers(1, &mesh->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mesh->vertices), mesh->vertices, GL_STATIC_DRAW);
+
+    // Populate element buffer
+    glGenBuffers(1, &mesh->ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh->indices), mesh->indices, GL_STATIC_DRAW);
+
+    // Bind vertex position attribute
+    GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
+    glVertexAttribPointer(pos_attr_loc, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void *)0);
+    glEnableVertexAttribArray(pos_attr_loc);
+
+    // Bind vertex texture coordinate attribute
+    // GLint tex_attr_loc = glGetAttribLocation(gl_shader_program, "in_Texcoord");
+    // glVertexAttribPointer(tex_attr_loc, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
+    // glEnableVertexAttribArray(tex_attr_loc);
+}
+
+void draw_mesh(Mesh *mesh)
+{
+    // glBindVertexArray(mesh->vao);
+    // glEnableVertexAttribArray(0);
+    // GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "position");
+
+    glDrawElements(GL_TRIANGLES, mesh->indices_size, GL_UNSIGNED_INT, NULL);
+
+    // glDisableVertexAttribArray(0);
+    // glBindVertexArray(0);
+}
+
+bool init_shaders()
+{
+    GLint status;
+    char err_buf[512];
+
+    // vertex
+    GLuint vertex_id = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_id, 1, &vert_shader, NULL);
+    glCompileShader(vertex_id);
+    glGetShaderiv(vertex_id, GL_COMPILE_STATUS, &status);
+    if (status != GL_TRUE)
+    {
+        glGetShaderInfoLog(vertex_id, sizeof(err_buf), NULL, err_buf);
+        err_buf[sizeof(err_buf) - 1] = '\0';
+        fprintf(stderr, "Vertex shader compilation failed: %s\n", err_buf);
+        return false;
+    }
+
+    // fragment
+    GLuint fragment_id = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_id, 1, &frag_shader, NULL);
+    glCompileShader(fragment_id);
+    glGetShaderiv(fragment_id, GL_COMPILE_STATUS, &status);
+    if (status != GL_TRUE)
+    {
+        glGetShaderInfoLog(fragment_id, sizeof(err_buf), NULL, err_buf);
+        err_buf[sizeof(err_buf) - 1] = '\0';
+        fprintf(stderr, "Fragment shader compilation failed: %s\n", err_buf);
+        return false;
+    }
+
+    gl_shader_program = glCreateProgram();
+    glAttachShader(gl_shader_program, vertex_id);
+    glAttachShader(gl_shader_program, fragment_id);
+
+    glBindFragDataLocation(gl_shader_program, 0, "out_color");
+
+    glLinkProgram(gl_shader_program);
+    glUseProgram(gl_shader_program);
+
+    return true;
 }

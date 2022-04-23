@@ -1,1 +1,1 @@
-make && open ./build/app
+make && ./build/app

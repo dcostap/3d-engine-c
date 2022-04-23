@@ -26,12 +26,24 @@ int init_engine(bool (*main_loop)(float delta))
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    SDL_GL_SetSwapInterval(1);
+    SDL_GL_SetAttribute(
+        SDL_GL_CONTEXT_PROFILE_MASK,
+        SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetSwapInterval(1); // Use Vsync
 
     sdl_window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                   SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
 
     context = SDL_GL_CreateContext(sdl_window);
+
+    if (context == NULL)
+    {
+        fprintf(stderr, "Failed to create GL context\n");
+        SDL_DestroyWindow(sdl_window);
+        SDL_Quit();
+        return 1;
+    }
 
     bool quit = false;
     Uint64 last_time = 0;
@@ -70,39 +82,7 @@ int init_engine(bool (*main_loop)(float delta))
 
         float delta = elapsed / 1000.0f;
 
-        // quit = main_loop((float)(elapsed / 1000.0f));
-
-        SDL_Event e;
-        while (SDL_PollEvent(&e))
-        {
-            if (e.type == SDL_QUIT)
-            {
-                return true;
-            }
-            else if (e.type == SDL_KEYDOWN)
-            {
-                switch (e.key.keysym.sym)
-                {
-                case SDLK_ESCAPE:
-                    return true;
-                }
-            }
-        }
-
-        glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-        glClearColor(0.3f, 0.2f, 0.5f, 0.f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glBegin(GL_POLYGON);
-        glColor3f(1, 0, 0);
-        glVertex3f(-0.6, -0.75, 0.5);
-        glColor3f(0, 1, 0);
-        glVertex3f(0.6, -0.75, 0);
-        glColor3f(0, 0, 1);
-        glVertex3f(0, 0.75, 0);
-        glEnd();
-
-        SDL_GL_SwapWindow(sdl_window);
+        quit = main_loop(delta);
     }
 
     dispose();
