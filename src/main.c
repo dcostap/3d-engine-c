@@ -5,7 +5,7 @@
 
 bool main_loop(float delta);
 int main(void);
-bool init_shaders();
+int init_shaders(char *vert_shader, char *frag_shader);
 
 GLuint gl_shader_program;
 
@@ -22,12 +22,13 @@ Mesh mesh = {
     .vertices = {
         {-1.0f, -1.0f, 0.0f},
         {-1.0f, 0.0f, 0.0f},
-        {-0.7f, 0.0f, 1.0f},
-        {-0.7f, -1.0f, 1.0f},
+        {0.4f, 0.0f, 1.0f},
+        {0.4f, -1.0f, 1.0f},
     },
     .vertices_size = 4,
     .indices = {0, 1, 2, 0, 2, 3},
-    .indices_size = 6};
+    .indices_size = 6
+};
 
 Mesh mesh2 = {
     .vertices = {
@@ -37,7 +38,30 @@ Mesh mesh2 = {
     },
     .vertices_size = 3,
     .indices = {0, 1, 2},
-    .indices_size = 3};
+    .indices_size = 3
+};
+
+static const char* vert_shader = "\
+#version 400 core                                                                                       \n\
+                                                                                                        \n\
+in vec3 in_position;                                                                                       \n\
+out vec3 vert_position;                                                                                       \n\
+                                                                                                        \n\
+void main(void) {                                                                                       \n\
+    vert_position = in_position;                                                  \n\
+    gl_Position = vec4(in_position.x, in_position.y, 0.0, 1.0);                                                  \n\
+}                                                                                                       \n\
+";
+
+static const char* frag_shader = "\
+#version 400 core                                                              \n\
+in vec3 vert_position;                                                                               \n\
+out vec4 out_color;                                                          \n\
+                                                                               \n\
+void main(void) {                                                              \n\
+    out_color = vec4((vert_position.x + 1) / 2.0, 0.0, 0.0, 1.0);                                      \n\
+}                                                                              \n\
+";
 
 int main(void)
 {
@@ -51,7 +75,8 @@ bool main_loop(float delta)
     if (is_first_loop)
     {
         is_first_loop = false;
-        if (!init_shaders())
+        gl_shader_program = init_shaders(vert_shader, frag_shader);
+        if (gl_shader_program == NULL)
         {
             return true;
         }
@@ -83,35 +108,19 @@ bool main_loop(float delta)
     glClearColor(0.3f, 0.2f, 0.5f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glUseProgram(gl_shader_program);
+
     draw_mesh(&mesh);
     draw_mesh(&mesh2);
+
+    glUseProgram(0);
 
     SDL_GL_SwapWindow(sdl_window);
 
     return false;
 }
 
-static const char *vert_shader = "\
-#version 400 core                                                                                       \n\
-                                                                                                        \n\
-in vec3 in_position;                                                                                       \n\
-                                                                                                        \n\
-void main(void) {                                                                                       \n\
-    gl_Position = vec4(in_position.x, in_position.y, 0.0, 1.0);                                                  \n\
-}                                                                                                       \n\
-";
-
-static const char *frag_shader = "\
-#version 400 core                                                              \n\
-                                                                               \n\
-out vec4 out_color;                                                          \n\
-                                                                               \n\
-void main(void) {                                                              \n\
-    out_color = vec4(1.0, 0.0, 0.0, 1.0);                                      \n\
-}                                                                              \n\
-";
-
-void init_mesh(Mesh *mesh)
+void init_mesh(Mesh* mesh)
 {
 
     glGenVertexArrays(1, &mesh->vao);
@@ -129,7 +138,7 @@ void init_mesh(Mesh *mesh)
 
     // Bind vertex position attribute
     GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
-    glVertexAttribPointer(pos_attr_loc, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(pos_attr_loc, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(pos_attr_loc);
 
     // Bind vertex texture coordinate attribute
@@ -140,7 +149,7 @@ void init_mesh(Mesh *mesh)
     glBindVertexArray(0);
 }
 
-void draw_mesh(Mesh *mesh)
+void draw_mesh(Mesh* mesh)
 {
     glBindVertexArray(mesh->vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
@@ -149,8 +158,10 @@ void draw_mesh(Mesh *mesh)
     glBindVertexArray(0);
 }
 
-bool init_shaders()
+int init_shaders(char *vert_shader, char *frag_shader)
 {
+    GLuint new_program;
+
     GLint status;
     char err_buf[512];
 
@@ -164,7 +175,7 @@ bool init_shaders()
         glGetShaderInfoLog(vertex_id, sizeof(err_buf), NULL, err_buf);
         err_buf[sizeof(err_buf) - 1] = '\0';
         fprintf(stderr, "Vertex shader compilation failed: %s\n", err_buf);
-        return false;
+        return NULL;
     }
 
     // fragment
@@ -177,17 +188,34 @@ bool init_shaders()
         glGetShaderInfoLog(fragment_id, sizeof(err_buf), NULL, err_buf);
         err_buf[sizeof(err_buf) - 1] = '\0';
         fprintf(stderr, "Fragment shader compilation failed: %s\n", err_buf);
-        return false;
+        return NULL;
     }
 
-    gl_shader_program = glCreateProgram();
-    glAttachShader(gl_shader_program, vertex_id);
-    glAttachShader(gl_shader_program, fragment_id);
+    new_program = glCreateProgram();
+    glAttachShader(new_program, vertex_id);
+    glAttachShader(new_program, fragment_id);
 
-    glBindFragDataLocation(gl_shader_program, 0, "out_color");
+    glBindFragDataLocation(new_program, 0, "out_color");
 
-    glLinkProgram(gl_shader_program);
-    glUseProgram(gl_shader_program);
+    glLinkProgram(new_program);
+    glUseProgram(new_program);
 
-    return true;
+    glGetProgramiv(new_program, GL_LINK_STATUS, &status);
+    if (status != GL_TRUE)
+    {
+        glGetShaderInfoLog(new_program, sizeof(err_buf), NULL, err_buf);
+        err_buf[sizeof(err_buf) - 1] = '\0';
+        fprintf(stderr, "Program (shader) linking failed: %s\n", err_buf);
+        return NULL;
+    }
+
+    glDetachShader(new_program, fragment_id);
+    glDetachShader(new_program, vertex_id);
+
+    glDeleteShader(fragment_id);
+    glDeleteShader(vertex_id);
+
+    glUseProgram(0);
+
+    return new_program;
 }
