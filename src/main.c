@@ -5,9 +5,10 @@
 
 bool main_loop(float delta);
 int main(void);
-int init_shaders(char *vert_shader, char *frag_shader);
+int init_shaders(char* vert_shader, char* frag_shader);
 
 GLuint gl_shader_program;
+
 
 typedef struct Mesh
 {
@@ -18,16 +19,29 @@ typedef struct Mesh
     int indices_size;
 } Mesh;
 
+typedef struct Entity {
+    Vec3 position;
+    Vec3 rotation;
+    Vec3 scale;
+    Mat4 world_transform;
+    Mesh mesh;
+} Entity;
+
 Mesh mesh = {
     .vertices = {
         {-1.0f, -1.0f, 0.0f},
         {-1.0f, 0.0f, 0.0f},
+        {0.4f, 0.0f, 0.0f},
+        {0.4f, -1.0f, 0.0f},
+
+        {-1.0f, -1.0f, 1.0f},
+        {-1.0f, 0.0f, 1.0f},
         {0.4f, 0.0f, 1.0f},
         {0.4f, -1.0f, 1.0f},
     },
-    .vertices_size = 4,
-    .indices = {0, 1, 2, 0, 2, 3},
-    .indices_size = 6
+    .vertices_size = 8,
+    .indices = {0, 1, 2, 0, 2, 3, 6, 7, 8, 6, 8, 9},
+    .indices_size = 12
 };
 
 Mesh mesh2 = {
@@ -46,10 +60,11 @@ static const char* vert_shader = "\
                                                                                                         \n\
 in vec3 in_position;                                                                                       \n\
 out vec3 vert_position;                                                                                       \n\
+uniform mat4 transform;                                                                                       \n\
                                                                                                         \n\
 void main(void) {                                                                                       \n\
     vert_position = in_position;                                                  \n\
-    gl_Position = vec4(in_position.x, in_position.y, 0.0, 1.0);                                                  \n\
+    gl_Position = transform * vec4(in_position, 1.0);                                                  \n\
 }                                                                                                       \n\
 ";
 
@@ -62,6 +77,21 @@ void main(void) {                                                              \
     out_color = vec4((vert_position.x + 1) / 2.0, 0.0, 0.0, 1.0);                                      \n\
 }                                                                              \n\
 ";
+
+Entity ent1 = {
+    .position = { 0.0f, 0.0f, 0.0f },
+    .rotation = { 0.0f, 0.0f, 0.0f },
+    .scale = { 1.0f, 1.0f, 1.0f },
+};
+
+void entity_apply_transform(Entity* ent) {
+    mat4_set_identity(&ent->world_transform);
+    mat4_translate_by_vec3(&ent->world_transform, ent->position);
+    mat4_rotate_around_axis(&ent->world_transform, X_AXIS, ent->rotation.x);
+    mat4_rotate_around_axis(&ent->world_transform, Y_AXIS, ent->rotation.y);
+    mat4_rotate_around_axis(&ent->world_transform, Z_AXIS, ent->rotation.z);
+    mat4_scale_by_vec3(&ent->world_transform, ent->scale);
+}
 
 int main(void)
 {
@@ -82,6 +112,8 @@ bool main_loop(float delta)
         }
 
         init_mesh(&mesh);
+        ent1.mesh = mesh;
+
         init_mesh(&mesh2);
     }
 
@@ -110,8 +142,11 @@ bool main_loop(float delta)
 
     glUseProgram(gl_shader_program);
 
-    draw_mesh(&mesh);
-    draw_mesh(&mesh2);
+    // ent1.position.x += 0.01f;
+    ent1.rotation.x += 1.f;
+    ent1.rotation.y += 1.f;
+    entity_apply_transform(&ent1);
+    draw_entity(&ent1);
 
     glUseProgram(0);
 
@@ -122,7 +157,6 @@ bool main_loop(float delta)
 
 void init_mesh(Mesh* mesh)
 {
-
     glGenVertexArrays(1, &mesh->vao);
     glBindVertexArray(mesh->vao);
 
@@ -149,16 +183,44 @@ void init_mesh(Mesh* mesh)
     glBindVertexArray(0);
 }
 
+void print_matrix(Mat4 mtx) {
+    for (int i = 0; i < 4; i++) {
+        printf("[");
+        for (int j = 0; j < 4; j++) {
+            printf("%f, ", mtx[j + 4 * i]);
+        }
+        printf("]\n");
+    }
+    printf("\n");
+}
+
+void draw_entity(Entity* ent) {
+    GLuint id = glGetUniformLocation(gl_shader_program, "transform");
+
+    glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
+
+    draw_mesh(&ent->mesh);
+}
+
+void check_gl_errors(char* context) {
+    GLenum error = glGetError();
+    if (GL_NO_ERROR != error) {
+        printf("GL Error %x encountered in %s.\n", error, context);
+        exit(1);
+    }
+}
+
 void draw_mesh(Mesh* mesh)
 {
     glBindVertexArray(mesh->vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
     glDrawElements(GL_TRIANGLES, mesh->indices_size, GL_UNSIGNED_INT, NULL);
+
     glBindVertexArray(0);
 }
 
-int init_shaders(char *vert_shader, char *frag_shader)
+int init_shaders(char* vert_shader, char* frag_shader)
 {
     GLuint new_program;
 

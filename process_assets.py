@@ -94,7 +94,7 @@ def process_obj_file(file):
     with open("./src/assets/" + filename_no_extension + ".h", "w") as c_file:
         c_file.write(
 f"""\
-#include "../utils_3d.h"
+#include "../math.h"
 
 extern Mesh {filename_no_extension};
 """

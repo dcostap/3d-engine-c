@@ -43,7 +43,7 @@ CFLAGS = -Wall -Wextra -pg -std=c99 -pedantic -Wno-unused-parameter
 # makefile (from 'Makefile', line 1)
 MAKEFILE_LIST :=  Makefile
 # 'override' directive
-GNUMAKEFLAGS := 
+GNUMAKEFLAGS :=
 # environment
 XDG_DATA_DIRS = /usr/local/share:/usr/share:/var/lib/snapd/desktop
 # environment
@@ -75,7 +75,7 @@ VSCODE_PIPE_LOGGING = true
 # environment
 PWD = /mnt/c/Users/Dario Costa/Desktop/random_projects/c-3d-engine
 # default
-.LOADED := 
+.LOADED :=
 # environment
 WSL_INTEROP = /run/WSL/9_interop
 # environment
@@ -121,7 +121,7 @@ VSCODE_WSL_EXT_LOCATION = /mnt/c/Users/Dario Costa/.vscode/extensions/ms-vscode-
 # default
 MAKE_COMMAND := make
 # default
-.VARIABLES := 
+.VARIABLES :=
 # automatic
 *F = $(notdir $*)
 # makefile
@@ -137,7 +137,7 @@ MFLAGS = -pqrR
 # environment
 WT_PROFILE_ID = {2c4de342-38b7-51cf-b940-2309a097f518}
 # default
-MAKEFILES := 
+MAKEFILES :=
 # automatic
 <F = $(notdir $<)
 # environment
@@ -149,13 +149,13 @@ LIBS = -Llibs -lSDL2
 # automatic
 ^F = $(notdir $^)
 # default
-SUFFIXES := 
+SUFFIXES :=
 # environment
 WAYLAND_DISPLAY = wayland-0
 # default
 .INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
 # default
-.RECIPEPREFIX := 
+.RECIPEPREFIX :=
 # environment
 LANG = C
 # environment
@@ -208,7 +208,7 @@ Makefile:
 #  Successfully updated.
 
 # Not a target:
-src/utils_3d.c:
+src/math.c:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -225,7 +225,7 @@ src/main.c:
 #  Modification time never checked.
 #  File has not been updated.
 
-build/app: src/main.c src/utils_3d.c src/engine.c src/assets/mario.c
+build/app: src/main.c src/math.c src/engine.c src/assets/mario.c
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -256,4 +256,4 @@ src/engine.c:
 # Load=33/8192=0%, Rehash=0, Collisions=3/44=7%
 # Finished Make data base on Tue Apr 19 13:20:13 2022
 
- 
+
