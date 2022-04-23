@@ -12,25 +12,36 @@ GLuint gl_shader_program;
 typedef struct Mesh
 {
     GLuint vao, vbo, ebo;
-    float vertices[6][3];
+    float vertices[1000][3];
     int vertices_size;
-    int indices[6];
+    int indices[1000];
     int indices_size;
 } Mesh;
 
 Mesh mesh = {
-    .vertices = {{-0.5f, -0.7f, 0.0f, 1.0f},
-                 {-1.0f, 0.0f, 0.0f, 0.0f},
-                 {1.0f, 1.0f, 1.0f, 0.0f},
-                 {1.0f, -1.0f, 1.0f, 1.0f}},
+    .vertices = {
+        {-1.0f, -1.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        {-0.7f, 0.0f, 1.0f},
+        {-0.7f, -1.0f, 1.0f},
+    },
     .vertices_size = 4,
     .indices = {0, 1, 2, 0, 2, 3},
     .indices_size = 6};
 
+Mesh mesh2 = {
+    .vertices = {
+        {0.0f, 0.5f, 0.0f},
+        {0.5f, 0.5f, 0.0f},
+        {0.0f, 0.0f, 1.0f},
+    },
+    .vertices_size = 3,
+    .indices = {0, 1, 2},
+    .indices_size = 3};
+
 int main(void)
 {
     return init_engine(main_loop);
-    // return main_test();
 }
 
 static bool is_first_loop = true;
@@ -46,6 +57,7 @@ bool main_loop(float delta)
         }
 
         init_mesh(&mesh);
+        init_mesh(&mesh2);
     }
 
     SDL_Event e;
@@ -67,24 +79,12 @@ bool main_loop(float delta)
 
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    // glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glClearColor(0.3f, 0.2f, 0.5f, 0.f);
-    // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     draw_mesh(&mesh);
-
-    // glClearColor(0.3f, 0.2f, 0.5f, 0.f);
-    // glClear(GL_COLOR_BUFFER_BIT);
-
-    // glBegin(GL_TRIANGLES);
-    // glColor3f(1, 0, 0);
-    // glVertex3f(-0.6, -0.75, 0.5);
-    // glColor3f(0, 1, 0);
-    // glVertex3f(0.6, -0.75, 0);
-    // glColor3f(0, 0, 1);
-    // glVertex3f(0, 0.75, 0);
-    // glEnd();
+    draw_mesh(&mesh2);
 
     SDL_GL_SwapWindow(sdl_window);
 
@@ -111,51 +111,42 @@ void main(void) {                                                              \
 }                                                                              \n\
 ";
 
-const GLfloat verts[6][4] = {
-    //  x      y      s      t
-    {-0.5f, -0.7f, 0.0f, 1.0f}, // BL
-    {-1.0f, 0.0f, 0.0f, 0.0f},  // TL
-    {1.0f, 1.0f, 1.0f, 0.0f},   // TR
-    {1.0f, -1.0f, 1.0f, 1.0f},  // BR
-};
-
-const GLint indicies[] = {
-    0, 1, 2, 0, 2, 3};
-
 void init_mesh(Mesh *mesh)
 {
-    printf("%d", sizeof(mesh->vertices));
+
+    glGenVertexArrays(1, &mesh->vao);
+    glBindVertexArray(mesh->vao);
+
     // Populate vertex buffer
     glGenBuffers(1, &mesh->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(mesh->vertices), mesh->vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(mesh->vertices[0]) * mesh->vertices_size, mesh->vertices, GL_STATIC_DRAW);
 
     // Populate element buffer
     glGenBuffers(1, &mesh->ebo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh->indices), mesh->indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh->indices[0]) * mesh->indices_size, mesh->indices, GL_STATIC_DRAW);
 
     // Bind vertex position attribute
     GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
-    glVertexAttribPointer(pos_attr_loc, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(pos_attr_loc, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(pos_attr_loc);
 
     // Bind vertex texture coordinate attribute
     // GLint tex_attr_loc = glGetAttribLocation(gl_shader_program, "in_Texcoord");
     // glVertexAttribPointer(tex_attr_loc, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
     // glEnableVertexAttribArray(tex_attr_loc);
+
+    glBindVertexArray(0);
 }
 
 void draw_mesh(Mesh *mesh)
 {
-    // glBindVertexArray(mesh->vao);
-    // glEnableVertexAttribArray(0);
-    // GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "position");
+    glBindVertexArray(mesh->vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
     glDrawElements(GL_TRIANGLES, mesh->indices_size, GL_UNSIGNED_INT, NULL);
-
-    // glDisableVertexAttribArray(0);
-    // glBindVertexArray(0);
+    glBindVertexArray(0);
 }
 
 bool init_shaders()
