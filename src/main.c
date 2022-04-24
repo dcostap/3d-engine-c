@@ -3,12 +3,13 @@
 #include <math.h>
 // #include "test.c"
 
+#define ARRAY_LENGTH_STACK(x)  (sizeof(x) / sizeof((x)[0]))
+
 bool main_loop(float delta);
 int main(void);
 int init_shaders(char* vert_shader, char* frag_shader);
 
 GLuint gl_shader_program;
-
 
 typedef struct Mesh
 {
@@ -19,7 +20,8 @@ typedef struct Mesh
     int indices_size;
 } Mesh;
 
-typedef struct Entity {
+typedef struct Entity
+{
     Vec3 position;
     Vec3 rotation;
     Vec3 scale;
@@ -27,32 +29,32 @@ typedef struct Entity {
     Mesh mesh;
 } Entity;
 
+typedef struct Camera {
+    Vec3 position;
+    Vec3 rotation;
+    Vec3 scale;
+    Mat4 world_transform;
+} Camera;
+
 Mesh mesh = {
     .vertices = {
         {-1.0f, -1.0f, 0.0f},
-        {-1.0f, 0.0f, 0.0f},
-        {0.4f, 0.0f, 0.0f},
-        {0.4f, -1.0f, 0.0f},
+        {-0.5f, 0.0f, 0.0f},
+        {0.0f, -1.0f, 0.0f},
 
-        {-1.0f, -1.0f, 1.0f},
-        {-1.0f, 0.0f, 1.0f},
-        {0.4f, 0.0f, 1.0f},
-        {0.4f, -1.0f, 1.0f},
+        {0.0f, -1.0f, 0.0f},
+        {0.0f, -0.5f, 0.5f},
+        {0.0f, 0.0f, 0.5f},
     },
-    .vertices_size = 8,
-    .indices = {0, 1, 2, 0, 2, 3, 6, 7, 8, 6, 8, 9},
-    .indices_size = 12
+    .vertices_size = 6,
+    .indices = {0, 1, 2, 3, 4, 5},
+    .indices_size = 6
 };
 
-Mesh mesh2 = {
-    .vertices = {
-        {0.0f, 0.5f, 0.0f},
-        {0.5f, 0.5f, 0.0f},
-        {0.0f, 0.0f, 1.0f},
-    },
-    .vertices_size = 3,
-    .indices = {0, 1, 2},
-    .indices_size = 3
+Camera camera = {
+    .scale = {
+        1.0f, 1.0f, 1.0f
+    }
 };
 
 static const char* vert_shader = "\
@@ -60,11 +62,12 @@ static const char* vert_shader = "\
                                                                                                         \n\
 in vec3 in_position;                                                                                       \n\
 out vec3 vert_position;                                                                                       \n\
-uniform mat4 transform;                                                                                       \n\
+uniform mat4 local_transform;                                                                                       \n\
+uniform mat4 view_transform;                                                                                       \n\
                                                                                                         \n\
 void main(void) {                                                                                       \n\
     vert_position = in_position;                                                  \n\
-    gl_Position = transform * vec4(in_position, 1.0);                                                  \n\
+    gl_Position = inverse(view_transform) * local_transform * vec4(in_position, 1.0);                                                  \n\
 }                                                                                                       \n\
 ";
 
@@ -84,13 +87,37 @@ Entity ent1 = {
     .scale = { 1.0f, 1.0f, 1.0f },
 };
 
-void entity_apply_transform(Entity* ent) {
+void camera_update_transform(Camera *camera) {
+    mat4_set_identity(&camera->world_transform);
+    mat4_translate_by_vec3(&camera->world_transform, camera->position);
+    mat4_rotate_around_axis(&camera->world_transform, X_AXIS, camera->rotation.x);
+    mat4_rotate_around_axis(&camera->world_transform, Y_AXIS, camera->rotation.y);
+    mat4_rotate_around_axis(&camera->world_transform, Z_AXIS, camera->rotation.z);
+    mat4_scale_by_vec3(&camera->world_transform, camera->scale);
+}
+
+void entity_update_transform(Entity* ent) {
     mat4_set_identity(&ent->world_transform);
     mat4_translate_by_vec3(&ent->world_transform, ent->position);
     mat4_rotate_around_axis(&ent->world_transform, X_AXIS, ent->rotation.x);
     mat4_rotate_around_axis(&ent->world_transform, Y_AXIS, ent->rotation.y);
     mat4_rotate_around_axis(&ent->world_transform, Z_AXIS, ent->rotation.z);
     mat4_scale_by_vec3(&ent->world_transform, ent->scale);
+}
+
+void mesh_apply_transform(Mesh *mesh, Mat4 *transform) {
+    for (int i = 0; i < ARRAY_LENGTH_STACK(mesh->vertices); i++) {
+        for (int j = 0; j < ARRAY_LENGTH_STACK(mesh->vertices[i]); j++) {
+            Vec3 tmp;
+            tmp.x = mesh->vertices[i][0];
+            tmp.y = mesh->vertices[i][1];
+            tmp.z = mesh->vertices[i][2];
+            vec3_transform_by_mat4(&tmp, transform);
+            mesh->vertices[i][0] = tmp.x;
+            mesh->vertices[i][1] = tmp.y;
+            mesh->vertices[i][2] = tmp.z;
+        }
+    }
 }
 
 int main(void)
@@ -111,10 +138,8 @@ bool main_loop(float delta)
             return true;
         }
 
-        init_mesh(&mesh);
         ent1.mesh = mesh;
-
-        init_mesh(&mesh2);
+        init_entity(&ent1);
     }
 
     SDL_Event e;
@@ -134,6 +159,9 @@ bool main_loop(float delta)
         }
     }
 
+
+    camera.position.x += 0.001;
+
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     glEnable(GL_DEPTH_TEST);
@@ -142,10 +170,15 @@ bool main_loop(float delta)
 
     glUseProgram(gl_shader_program);
 
-    // ent1.position.x += 0.01f;
-    ent1.rotation.x += 1.f;
-    ent1.rotation.y += 1.f;
-    entity_apply_transform(&ent1);
+    camera_update_transform(&camera);
+    GLuint id = glGetUniformLocation(gl_shader_program, "view_transform");
+    glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform);
+
+    // ent1.position.x += 0.002f;
+    ent1.rotation.z += 2.0f;
+    ent1.rotation.z += 1.f;
+    entity_update_transform(&ent1);
+
     draw_entity(&ent1);
 
     glUseProgram(0);
@@ -155,7 +188,7 @@ bool main_loop(float delta)
     return false;
 }
 
-void init_mesh(Mesh* mesh)
+void bind_mesh_to_opengl(Mesh* mesh)
 {
     glGenVertexArrays(1, &mesh->vao);
     glBindVertexArray(mesh->vao);
@@ -183,6 +216,11 @@ void init_mesh(Mesh* mesh)
     glBindVertexArray(0);
 }
 
+void init_entity(Entity* ent)
+{
+    bind_mesh_to_opengl(&ent->mesh);
+}
+
 void print_matrix(Mat4 mtx) {
     for (int i = 0; i < 4; i++) {
         printf("[");
@@ -195,8 +233,7 @@ void print_matrix(Mat4 mtx) {
 }
 
 void draw_entity(Entity* ent) {
-    GLuint id = glGetUniformLocation(gl_shader_program, "transform");
-
+    GLuint id = glGetUniformLocation(gl_shader_program, "local_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
 
     draw_mesh(&ent->mesh);

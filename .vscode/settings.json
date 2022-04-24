@@ -31,7 +31,8 @@
         "sdl_opengl.h": "c",
         "common.h": "c",
         "sdl_opengles.h": "c",
-        "glext.h": "c"
+        "glext.h": "c",
+        "*.inc": "c"
     },
     "makefile.launchConfigurations": [
         {
