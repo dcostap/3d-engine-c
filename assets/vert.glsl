@@ -8,5 +8,5 @@ uniform mat4 proj_transform;
 
 void main(void) {
     vert_position = in_position;
-    gl_Position = proj_transform * inverse(view_transform) * local_transform * vec4(in_position, 1.0);
+    gl_Position = proj_transform * view_transform * local_transform * vec4(in_position, 1.0);
 }

@@ -33,7 +33,8 @@
         "sdl_opengles.h": "c",
         "glext.h": "c",
         "*.inc": "c",
-        "utils.h": "c"
+        "utils.h": "c",
+        "main.h": "c"
     },
     "makefile.launchConfigurations": [
         {

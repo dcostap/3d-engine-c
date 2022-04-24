@@ -69,7 +69,7 @@ float vec3_get_length(Vec3 v)
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-void vec3_set_unit(Vec3 *v)
+void vec3_set_unit(Vec3* v)
 {
     float length = vec3_get_length(*v);
 
@@ -80,31 +80,47 @@ void vec3_set_unit(Vec3 *v)
     }
 }
 
-void vec3_copy_to(Vec3 src, Vec3 *dest) {
+void vec3_set(Vec3* dest, Vec3 src) {
     dest->x = src.x;
     dest->y = src.y;
     dest->z = src.z;
 }
 
-void vec3_set(Vec3 *dest, float x, float y, float z) {
+void vec3_scl(Vec3* dest, float x, float y, float z) {
+    dest->x *= x;
+    dest->y *= y;
+    dest->z *= z;
+}
+
+void vec3_set_values(Vec3* dest, float x, float y, float z) {
     dest->x = x;
     dest->y = y;
     dest->z = z;
 }
 
-void vec3_add(Vec3 *dest, Vec3 a) {
+void vec3_add(Vec3* dest, Vec3 a) {
     dest->x += a.x;
     dest->y += a.y;
     dest->z += a.z;
 }
 
-void vec3_sub(Vec3 *dest, Vec3 a) {
+void vec3_add_values(Vec3* dest, float x_add, float y_add, float z_add) {
+    dest->x += x_add;
+    dest->y += y_add;
+    dest->z += z_add;
+}
+
+void print_vector(Vec3 vec) {
+    printf("[%.2f, %.2f, %.2f]\n", vec.x, vec.y, vec.z);
+}
+
+void vec3_sub(Vec3* dest, Vec3 a) {
     dest->x -= a.x;
     dest->y -= a.y;
     dest->z -= a.z;
 }
 
-void vec3_cross(Vec3 *dest, Vec3 a, Vec3 b) {
+void vec3_cross(Vec3* dest, Vec3 a, Vec3 b) {
     dest->x = a.y * b.z - b.y * a.z;
     dest->y = a.z * b.x - b.z * a.x;
     dest->z = a.x * b.y - b.x * a.y;
@@ -125,10 +141,10 @@ void print_matrix(Mat4 mtx) {
     printf("\n");
 }
 
-void set_projection_matrix(Mat4 *mtx, float fov, float near, float far, int width, int height) {
+void set_projection_matrix(Mat4* mtx, float fov, float near, float far, int width, int height) {
     mat4_set_identity(mtx);
 
-    float aspect_ratio = (float) width / (float) height;
+    float aspect_ratio = (float)width / (float)height;
 
     float y_scale = (1.0f / tanf(to_radians(fov / 2.0f))) * aspect_ratio;
     float x_scale = y_scale / aspect_ratio;
@@ -297,11 +313,11 @@ void mat4_translate_by_vec3(Mat4* mtx, Vec3 vec) {
     (*mtx)[2 + 4 * 3] += vec.z;
 }
 
-void vec3_transform_by_mat4(Vec3 *vec, Mat4 *mtx)
+void vec3_transform_by_mat4(Vec3* vec, Mat4* mtx)
 {
     float tmp[4];
-    for ( int i = 0; i < 4; ++i )
-       tmp[i] = vec->x * (*mtx)[i + 4 * 0] + vec->y * (*mtx)[i + 4 * 1] + vec->z + (*mtx)[i + 4 * 2];
+    for (int i = 0; i < 4; ++i)
+        tmp[i] = vec->x * (*mtx)[i + 4 * 0] + vec->y * (*mtx)[i + 4 * 1] + vec->z + (*mtx)[i + 4 * 2];
 
     vec->x = tmp[0] / tmp[3];
     vec->y = tmp[1] / tmp[3];

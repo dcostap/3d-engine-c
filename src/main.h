@@ -1,11 +1,13 @@
+#pragma once
+
 #include "engine.h"
 
 typedef struct Mesh
 {
     GLuint vao, vbo, ebo;
-    float vertices[1000][3];
+    float** vertices;
     int vertices_size;
-    int indices[1000];
+    int* indices;
     int indices_size;
 } Mesh;
 

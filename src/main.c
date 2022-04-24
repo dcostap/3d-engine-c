@@ -1,27 +1,23 @@
 #include "main.h"
+#include "models/mario.h"
 
 GLuint gl_shader_program;
-
-Mesh mesh = {
-    .vertices = {
-        {-1.0f, -1.0f, 0.0f},
-        {-0.5f, 0.0f, 0.0f},
-        {0.0f, -1.0f, 0.0f},
-
-        {0.0f, -1.0f, 0.0f},
-        {0.0f, -0.5f, 0.5f},
-        {0.0f, 0.0f, 0.5f},
-    },
-    .vertices_size = 6,
-    .indices = {0, 1, 2, 3, 4, 5},
-    .indices_size = 6
-};
 
 Camera camera = {
     .scale = {
         1.0f, 1.0f, 1.0f
     }
 };
+
+SDL_KeyCode keys_pressed[100];
+int keys_pressed_size = 0;
+
+bool is_key_pressed(SDL_KeyCode key) {
+    for (int i = 0; i < keys_pressed_size; i++) {
+        if (keys_pressed[i] == key) return true;
+    }
+    return false;
+}
 
 Entity ent1 = {
     .position = { 0.0f, 0.0f, 0.0f },
@@ -47,8 +43,14 @@ bool main_loop(float delta)
             return true;
         }
 
-        ent1.mesh = mesh;
+        ent1.mesh = mario;
         init_entity(&ent1);
+
+        vec3_set_values(&ent1.scale, 0.2f, 0.2f, 0.2f);
+        ent1.position.z = -5.f;
+
+        // vec3_set_values(&camera.scale, 0.1f, 0.1f, 0.1f);
+        camera.position.z = 1.f;
     }
 
     SDL_Event e;
@@ -58,17 +60,60 @@ bool main_loop(float delta)
         {
             return true;
         }
-        else if (e.type == SDL_KEYDOWN)
+        else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
         {
-            switch (e.key.keysym.sym)
-            {
-            case SDLK_ESCAPE:
-                return true;
+            keys_pressed[keys_pressed_size] = e.key.keysym.sym;
+            keys_pressed_size++;
+        }
+        else if (e.type == SDL_KEYUP && e.key.repeat == 0)
+        {
+            SDL_KeyCode key = e.key.keysym.sym;
+            for (int i = 0; i < keys_pressed_size; i++) {
+                if (keys_pressed[i] == key) {
+                    // displace the rest of the array 1 spot to the left
+                    if (i < keys_pressed_size - 1) {
+                        for (int j = i; j < keys_pressed_size - 1; j++) {
+                            keys_pressed[j] = keys_pressed[j + 1];
+                        }
+                    }
+                    keys_pressed_size--;
+                    break;
+                }
             }
         }
     }
 
-    camera.position.z += 0.02;
+    float cam_speed = 0.1f;
+    float cam_rot_speed = 2.0f;
+
+    if (is_key_pressed(SDLK_ESCAPE))
+        return true;
+
+    if (is_key_pressed(SDLK_w))
+        camera.position.z -= cam_speed;
+    if (is_key_pressed(SDLK_s))
+        camera.position.z += cam_speed;
+    if (is_key_pressed(SDLK_a))
+        camera.position.x -= cam_speed;
+    if (is_key_pressed(SDLK_d))
+        camera.position.x += cam_speed;
+    if (is_key_pressed(SDLK_q))
+        camera.position.y += cam_speed;
+    if (is_key_pressed(SDLK_e))
+        camera.position.y -= cam_speed;
+
+    if (is_key_pressed(SDLK_k))
+        camera.rotation.x += cam_rot_speed;
+    if (is_key_pressed(SDLK_i))
+        camera.rotation.x -= cam_rot_speed;
+    if (is_key_pressed(SDLK_j))
+        camera.rotation.y -= cam_rot_speed;
+    if (is_key_pressed(SDLK_l))
+        camera.rotation.y += cam_rot_speed;
+    if (is_key_pressed(SDLK_u))
+        camera.rotation.z += cam_rot_speed;
+    if (is_key_pressed(SDLK_o))
+        camera.rotation.z -= cam_rot_speed;
 
     glViewport(0, 0, screen_width, screen_height);
 
@@ -88,9 +133,12 @@ bool main_loop(float delta)
     id = glGetUniformLocation(gl_shader_program, "view_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform);
 
+    // vec3_add_values(&ent1.scale, -0.01f, -0.01f, -0.01f);
+
+    // ent1.position.z -= 0.1f;
     // ent1.position.x += 0.002f;
-    ent1.rotation.z += 2.0f;
-    ent1.rotation.z += 1.f;
+    // ent1.rotation.z += 2.0f;
+    // ent1.rotation.z += 1.f;
     entity_update_transform(&ent1);
 
     draw_entity(&ent1);
@@ -104,7 +152,11 @@ bool main_loop(float delta)
 
 void camera_update_transform(Camera* camera) {
     mat4_set_identity(&camera->world_transform);
+
+    vec3_scl(&camera->position, -1.f, -1.f, -1.f);
     mat4_translate_by_vec3(&camera->world_transform, camera->position);
+    vec3_scl(&camera->position, -1.f, -1.f, -1.f);
+
     mat4_rotate_around_axis(&camera->world_transform, X_AXIS, camera->rotation.x);
     mat4_rotate_around_axis(&camera->world_transform, Y_AXIS, camera->rotation.y);
     mat4_rotate_around_axis(&camera->world_transform, Z_AXIS, camera->rotation.z);
@@ -152,7 +204,7 @@ void bind_mesh_to_opengl(Mesh* mesh)
 
     // Bind vertex position attribute
     GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
-    glVertexAttribPointer(pos_attr_loc, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(pos_attr_loc);
 
     // Bind vertex texture coordinate attribute
@@ -196,8 +248,8 @@ void draw_mesh(Mesh* mesh)
 int init_shaders(char* vert_shader_filename, char* frag_shader_filename)
 {
     size_t size;
-    const char *vert_shader = read_file(vert_shader_filename, &size);
-    const char *frag_shader = read_file(frag_shader_filename, &size);
+    const char* vert_shader = read_file(vert_shader_filename, &size);
+    const char* frag_shader = read_file(frag_shader_filename, &size);
 
     GLuint new_program;
 
@@ -261,5 +313,5 @@ int init_shaders(char* vert_shader_filename, char* frag_shader_filename)
 
 
 void dispose() {
-    
+
 }

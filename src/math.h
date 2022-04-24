@@ -34,9 +34,12 @@ void rotate_vector(Vec3* vector, float rotation_x, float rotation_y, float rotat
 float vec3_dot_product(Vec3 v1, Vec3 v2);
 float vec3_get_length(Vec3 v);
 void vec3_set_unit(Vec3 *v);
-void vec3_copy_to(Vec3 src, Vec3 *dest);
-void vec3_set(Vec3 *dest, float x, float y, float z);
+void vec3_set(Vec3 *dest, Vec3 src);
+void vec3_set_values(Vec3 *dest, float x, float y, float z);
 void vec3_add(Vec3 *dest, Vec3 a);
+void vec3_add_values(Vec3 *dest, float x_add, float y_add, float z_add);
+void vec3_scl(Vec3* dest, float x, float y, float z);
+void print_vector(Vec3 vec);
 void vec3_sub(Vec3 *dest, Vec3 a);
 void vec3_cross(Vec3 *dest, Vec3 a, Vec3 b);
 void mat4_scale_by_vec3(Mat4* mtx, Vec3 vec);

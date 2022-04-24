@@ -1,3 +1,4 @@
-// #include "../math.h"
-// #include <SDL_render.h>
+#include "../main.h"
 
+extern Mesh mario;
+        

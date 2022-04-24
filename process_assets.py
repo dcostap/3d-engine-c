@@ -2,9 +2,10 @@ import os
 import math
 import textwrap
 
-vertices = []
-triangles = []
+from numpy import append
 
+vertices = []
+indices = []
 
 def process_obj_file(file):
     with open(file, "r") as opened_file:
@@ -20,102 +21,55 @@ def process_obj_file(file):
                     }
                 )
             elif parts[0] == "f":
-                v1 = vertices[int(parts[1]) - 1]
-                v2 = vertices[int(parts[2]) - 1]
-                v3 = vertices[int(parts[3]) - 1]
-
-                v1v2 = {
-                    "x": v2["x"] - v1["x"],
-                    "y": v2["y"] - v1["y"],
-                    "z": v2["z"] - v1["z"],
-                }
-
-                v1v3 = {
-                    "x": v3["x"] - v1["x"],
-                    "y": v3["y"] - v1["y"],
-                    "z": v3["z"] - v1["z"],
-                }
-
-                def set_unit(vector):
-                    length = math.sqrt(
-                        pow(vector["x"], 2) +
-                        pow(vector["y"], 2) +
-                        pow(vector["z"], 2)
-                    )
-
-                    vector["x"] /= length
-                    vector["y"] /= length
-                    vector["z"] /= length
-
-                set_unit(v1v2)
-                set_unit(v1v3)
-
-                def cross_product(v1, v2):
-                    return {
-                        "x": v1["y"] * v2["z"] - v1["z"] * v2["y"],
-                        "y": v1["z"] * v2["x"] - v1["x"] * v2["z"],
-                        "z": v1["x"] * v2["y"] - v1["y"] * v2["x"],
-                    }
-
-                normal = cross_product(v1v2, v1v3)
-                set_unit(normal)
-
-                triangles.append(
-                    {
-                        "v1": v1,
-                        "v2": v2,
-                        "v3": v3,
-                        "normal": normal,
-                    }
-                )
+                indices.append(int(parts[1]) - 1)
+                indices.append(int(parts[2]) - 1)
+                indices.append(int(parts[3]) - 1)
 
     filename_no_extension = file.split("/")[-1].split(".")[0]
 
-    triangles_c = ""
+    vertices_c = ""
 
-    index = 0
-    for triangle in triangles:
-        v1 = triangle["v1"]
-        v2 = triangle["v2"]
-        v3 = triangle["v3"]
-        normal = triangle["normal"]
-
-        triangles_c += f"""\
-{{
-    .v1 = {{ .x = {v1["x"]}, .y = {v1["y"]}, .z = {v1["z"]}}},
-    .v2 = {{ .x = {v2["x"]}, .y = {v2["y"]}, .z = {v2["z"]}}},
-    .v3 = {{ .x = {v3["x"]}, .y = {v3["y"]}, .z = {v3["z"]}}},
-    .normal = {{.x = {normal["x"]}, .y = {normal["y"]}, .z = {normal["z"]}}}
-}},
+    for vertex in vertices:
+        vertices_c += \
+f"""\
+        {{ {str(vertex["x"])}f, {str(vertex["y"])}f, {str(vertex["z"])}f }},
 """
 
-        index += 1
+    indices_c = ""
+    for index in indices:
+        indices_c += f"{str(index)},"
 
-    with open("./src/assets/" + filename_no_extension + ".h", "w") as c_file:
-        c_file.write(
-f"""\
-#include "../math.h"
+    with open("./src/models/" + filename_no_extension + ".h", "w") as c_file:
+        c_file.write(f"""\
+#include "../main.h"
 
 extern Mesh {filename_no_extension};
-"""
-        )
+        """)
 
-    with open("./src/assets/" + filename_no_extension + ".c", "w") as c_file:
+    with open("./src/models/" + filename_no_extension + ".c", "w") as c_file:
         c_file.write(
 f"""\
-#include "mario.h"
+#include "{filename_no_extension}.h"
 
-Mesh {filename_no_extension} = {{
-    .triangles = {{
-        {triangles_c}
-    }},
-    .triangles_pos = {str(len(triangles))}
+static float vertices[{str(len(vertices))}][3] = {{
+{vertices_c}
+}};
+
+static int indices[{str(len(indices))}] = {{
+{indices_c}
+}};
+
+static Mesh {filename_no_extension} = {{
+    .vertices = vertices,
+    .vertices_size = {str(len(vertices))},
+    .indices = indices,
+    .indices_size = {str(len(indices))},
 }};
 """
-        )
+)
 
 
-root = "./assets"
+root = "./assets/models"
 for file in os.listdir(root):
     file = root + "/" + file
     if os.path.isfile(file):
