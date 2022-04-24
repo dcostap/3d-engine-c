@@ -17,10 +17,10 @@ extern SDL_Window *sdl_window;
 extern SDL_Renderer *renderer;
 
 extern int current_FPS;
-extern const int TARGET_FPS;
+extern int TARGET_FPS;
 
-extern const int SCREEN_WIDTH;
-extern const int SCREEN_HEIGHT;
+extern int SCREEN_WIDTH;
+extern int SCREEN_HEIGHT;
 
 int init_engine();
 void dispose();

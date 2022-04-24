@@ -1,14 +1,14 @@
 #include "engine.h"
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
-const int TARGET_FPS = 60;
+int SCREEN_WIDTH = 800;
+int SCREEN_HEIGHT = 600;
+int TARGET_FPS = 60;
 
 int current_FPS = 0;
 
-SDL_Window *sdl_window;
-SDL_Surface *screen_surface;
-SDL_Renderer *renderer;
+SDL_Window* sdl_window;
+SDL_Surface* screen_surface;
+SDL_Renderer* renderer;
 SDL_GLContext context;
 
 float random_float(const float min, const float max)
@@ -18,6 +18,19 @@ float random_float(const float min, const float max)
     else if (min < max)
         return (max - min) * ((float)rand() / RAND_MAX) + min;
 
+    return 0;
+}
+
+static int on_window_resize_event(void* data, SDL_Event* event) {
+    if (event->type == SDL_WINDOWEVENT &&
+        event->window.event == SDL_WINDOWEVENT_RESIZED) {
+        SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
+
+        SDL_GetWindowSize(win, &SCREEN_WIDTH, &SCREEN_HEIGHT);
+        if (win == (SDL_Window*)data) {
+            printf("<Resize Event>\n");
+        }
+    }
     return 0;
 }
 
@@ -33,7 +46,10 @@ int init_engine(bool (*main_loop)(float delta))
     SDL_GL_SetSwapInterval(1); // Use Vsync
 
     sdl_window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                  SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
+        SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
+
+    SDL_SetWindowResizable(sdl_window, true);
+    SDL_AddEventWatch(on_window_resize_event, sdl_window);
 
     context = SDL_GL_CreateContext(sdl_window);
 
