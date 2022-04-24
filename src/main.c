@@ -64,10 +64,11 @@ in vec3 in_position;                                                            
 out vec3 vert_position;                                                                                       \n\
 uniform mat4 local_transform;                                                                                       \n\
 uniform mat4 view_transform;                                                                                       \n\
+uniform mat4 proj_transform;                                                                                       \n\
                                                                                                         \n\
 void main(void) {                                                                                       \n\
     vert_position = in_position;                                                  \n\
-    gl_Position = inverse(view_transform) * local_transform * vec4(in_position, 1.0);                                                  \n\
+    gl_Position = proj_transform * inverse(view_transform) * local_transform * vec4(in_position, 1.0);                                                  \n\
 }                                                                                                       \n\
 ";
 
@@ -120,6 +121,24 @@ void mesh_apply_transform(Mesh *mesh, Mat4 *transform) {
     }
 }
 
+void set_projection_matrix(Mat4 *mtx, float fov, float near, float far, int width, int height) {
+    mat4_set_identity(mtx);
+
+    float aspect_ratio = (float) width / (float) height;
+
+    float y_scale = (1.0f / tanf(to_radians(fov / 2.0f))) * aspect_ratio;
+    float x_scale = y_scale / aspect_ratio;
+    float frustrum_length = far - near;
+
+    //    [column + row * 4]
+    (*mtx)[0 + 0 * 4] = x_scale;
+    (*mtx)[1 + 1 * 4] = y_scale;
+    (*mtx)[2 + 2 * 4] = -(far + near) / frustrum_length;
+    (*mtx)[3 + 2 * 4] = -1.0f;
+    (*mtx)[2 + 3 * 4] = -(2 * far * near) / frustrum_length;
+    (*mtx)[3 + 3 * 4] = 0.0f;
+}
+
 int main(void)
 {
     return init_engine(main_loop);
@@ -160,7 +179,7 @@ bool main_loop(float delta)
     }
 
 
-    camera.position.x += 0.001;
+    camera.position.z += 0.02;
 
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -170,8 +189,14 @@ bool main_loop(float delta)
 
     glUseProgram(gl_shader_program);
 
+    Mat4 projection;
+    set_projection_matrix(&projection, 90.0f, 0.1f, 100.0f, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    GLuint id = glGetUniformLocation(gl_shader_program, "proj_transform");
+    glUniformMatrix4fv(id, 1, GL_FALSE, projection);
+
     camera_update_transform(&camera);
-    GLuint id = glGetUniformLocation(gl_shader_program, "view_transform");
+    id = glGetUniformLocation(gl_shader_program, "view_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform);
 
     // ent1.position.x += 0.002f;

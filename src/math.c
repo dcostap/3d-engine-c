@@ -105,6 +105,7 @@ void vec3_cross(Vec3 *dest, Vec3 a, Vec3 b) {
 #pragma region MATRICES
 
 void mat4_scale_by_vec3(Mat4* mtx, Vec3 vec) {
+    //    [column + row * 4]
     (*mtx)[0 + 4 * 0] *= vec.x;
     (*mtx)[1 + 4 * 0] *= vec.x;
     (*mtx)[2 + 4 * 0] *= vec.x;
