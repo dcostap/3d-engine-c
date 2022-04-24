@@ -11,16 +11,6 @@ SDL_Surface* screen_surface;
 SDL_Renderer* renderer;
 SDL_GLContext context;
 
-float random_float(const float min, const float max)
-{
-    if (max == min)
-        return min;
-    else if (min < max)
-        return (max - min) * ((float)rand() / RAND_MAX) + min;
-
-    return 0;
-}
-
 static int on_window_resize_event(void* data, SDL_Event* event) {
     if (event->type == SDL_WINDOWEVENT &&
         event->window.event == SDL_WINDOWEVENT_RESIZED) {
@@ -34,7 +24,7 @@ static int on_window_resize_event(void* data, SDL_Event* event) {
     return 0;
 }
 
-int init_engine(bool (*main_loop)(float delta))
+int start_sdl_and_main_loop(bool (*main_loop)(float delta))
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);

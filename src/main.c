@@ -1,13 +1,12 @@
 #include "engine.h"
 #include "assets/mario.h"
 #include <math.h>
-// #include "test.c"
 
+// This won't work if the array is stored in the heap
 #define ARRAY_LENGTH_STACK(x)  (sizeof(x) / sizeof((x)[0]))
 
 bool main_loop(float delta);
 int main(void);
-int init_shaders(char* vert_shader, char* frag_shader);
 
 GLuint gl_shader_program;
 
@@ -121,27 +120,11 @@ void mesh_apply_transform(Mesh *mesh, Mat4 *transform) {
     }
 }
 
-void set_projection_matrix(Mat4 *mtx, float fov, float near, float far, int width, int height) {
-    mat4_set_identity(mtx);
 
-    float aspect_ratio = (float) width / (float) height;
-
-    float y_scale = (1.0f / tanf(to_radians(fov / 2.0f))) * aspect_ratio;
-    float x_scale = y_scale / aspect_ratio;
-    float frustrum_length = far - near;
-
-    //    [column + row * 4]
-    (*mtx)[0 + 0 * 4] = x_scale;
-    (*mtx)[1 + 1 * 4] = y_scale;
-    (*mtx)[2 + 2 * 4] = -(far + near) / frustrum_length;
-    (*mtx)[3 + 2 * 4] = -1.0f;
-    (*mtx)[2 + 3 * 4] = -(2 * far * near) / frustrum_length;
-    (*mtx)[3 + 3 * 4] = 0.0f;
-}
 
 int main(void)
 {
-    return init_engine(main_loop);
+    return start_sdl_and_main_loop(main_loop);
 }
 
 static bool is_first_loop = true;
@@ -177,7 +160,6 @@ bool main_loop(float delta)
             }
         }
     }
-
 
     camera.position.z += 0.02;
 
@@ -244,17 +226,6 @@ void bind_mesh_to_opengl(Mesh* mesh)
 void init_entity(Entity* ent)
 {
     bind_mesh_to_opengl(&ent->mesh);
-}
-
-void print_matrix(Mat4 mtx) {
-    for (int i = 0; i < 4; i++) {
-        printf("[");
-        for (int j = 0; j < 4; j++) {
-            printf("%f, ", mtx[j + 4 * i]);
-        }
-        printf("]\n");
-    }
-    printf("\n");
 }
 
 void draw_entity(Entity* ent) {

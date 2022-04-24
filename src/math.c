@@ -1,5 +1,15 @@
 #include "math.h"
 
+float random_float(const float min, const float max)
+{
+    if (max == min)
+        return min;
+    else if (min < max)
+        return (max - min) * ((float)rand() / RAND_MAX) + min;
+
+    return 0;
+}
+
 float to_radians(float degrees)
 {
     return degrees * PI / 180.0f;
@@ -103,6 +113,35 @@ void vec3_cross(Vec3 *dest, Vec3 a, Vec3 b) {
 #pragma endregion
 
 #pragma region MATRICES
+
+void print_matrix(Mat4 mtx) {
+    for (int i = 0; i < 4; i++) {
+        printf("[");
+        for (int j = 0; j < 4; j++) {
+            printf("%f, ", mtx[j + 4 * i]);
+        }
+        printf("]\n");
+    }
+    printf("\n");
+}
+
+void set_projection_matrix(Mat4 *mtx, float fov, float near, float far, int width, int height) {
+    mat4_set_identity(mtx);
+
+    float aspect_ratio = (float) width / (float) height;
+
+    float y_scale = (1.0f / tanf(to_radians(fov / 2.0f))) * aspect_ratio;
+    float x_scale = y_scale / aspect_ratio;
+    float frustrum_length = far - near;
+
+    //    [column + row * 4]
+    (*mtx)[0 + 0 * 4] = x_scale;
+    (*mtx)[1 + 1 * 4] = y_scale;
+    (*mtx)[2 + 2 * 4] = -(far + near) / frustrum_length;
+    (*mtx)[3 + 2 * 4] = -1.0f;
+    (*mtx)[2 + 3 * 4] = -(2 * far * near) / frustrum_length;
+    (*mtx)[3 + 3 * 4] = 0.0f;
+}
 
 void mat4_scale_by_vec3(Mat4* mtx, Vec3 vec) {
     //    [column + row * 4]

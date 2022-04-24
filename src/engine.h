@@ -22,5 +22,5 @@ extern int TARGET_FPS;
 extern int SCREEN_WIDTH;
 extern int SCREEN_HEIGHT;
 
-int init_engine();
+int start_sdl_and_main_loop();
 void dispose();
