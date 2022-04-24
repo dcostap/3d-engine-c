@@ -1,39 +1,6 @@
-#include "engine.h"
-#include "assets/mario.h"
-#include <math.h>
-
-// This won't work if the array is stored in the heap
-#define ARRAY_LENGTH_STACK(x)  (sizeof(x) / sizeof((x)[0]))
-
-bool main_loop(float delta);
-int main(void);
+#include "main.h"
 
 GLuint gl_shader_program;
-
-typedef struct Mesh
-{
-    GLuint vao, vbo, ebo;
-    float vertices[1000][3];
-    int vertices_size;
-    int indices[1000];
-    int indices_size;
-} Mesh;
-
-typedef struct Entity
-{
-    Vec3 position;
-    Vec3 rotation;
-    Vec3 scale;
-    Mat4 world_transform;
-    Mesh mesh;
-} Entity;
-
-typedef struct Camera {
-    Vec3 position;
-    Vec3 rotation;
-    Vec3 scale;
-    Mat4 world_transform;
-} Camera;
 
 Mesh mesh = {
     .vertices = {
@@ -56,75 +23,15 @@ Camera camera = {
     }
 };
 
-static const char* vert_shader = "\
-#version 400 core                                                                                       \n\
-                                                                                                        \n\
-in vec3 in_position;                                                                                       \n\
-out vec3 vert_position;                                                                                       \n\
-uniform mat4 local_transform;                                                                                       \n\
-uniform mat4 view_transform;                                                                                       \n\
-uniform mat4 proj_transform;                                                                                       \n\
-                                                                                                        \n\
-void main(void) {                                                                                       \n\
-    vert_position = in_position;                                                  \n\
-    gl_Position = proj_transform * inverse(view_transform) * local_transform * vec4(in_position, 1.0);                                                  \n\
-}                                                                                                       \n\
-";
-
-static const char* frag_shader = "\
-#version 400 core                                                              \n\
-in vec3 vert_position;                                                                               \n\
-out vec4 out_color;                                                          \n\
-                                                                               \n\
-void main(void) {                                                              \n\
-    out_color = vec4((vert_position.x + 1) / 2.0, 0.0, 0.0, 1.0);                                      \n\
-}                                                                              \n\
-";
-
 Entity ent1 = {
     .position = { 0.0f, 0.0f, 0.0f },
     .rotation = { 0.0f, 0.0f, 0.0f },
     .scale = { 1.0f, 1.0f, 1.0f },
 };
 
-void camera_update_transform(Camera *camera) {
-    mat4_set_identity(&camera->world_transform);
-    mat4_translate_by_vec3(&camera->world_transform, camera->position);
-    mat4_rotate_around_axis(&camera->world_transform, X_AXIS, camera->rotation.x);
-    mat4_rotate_around_axis(&camera->world_transform, Y_AXIS, camera->rotation.y);
-    mat4_rotate_around_axis(&camera->world_transform, Z_AXIS, camera->rotation.z);
-    mat4_scale_by_vec3(&camera->world_transform, camera->scale);
-}
-
-void entity_update_transform(Entity* ent) {
-    mat4_set_identity(&ent->world_transform);
-    mat4_translate_by_vec3(&ent->world_transform, ent->position);
-    mat4_rotate_around_axis(&ent->world_transform, X_AXIS, ent->rotation.x);
-    mat4_rotate_around_axis(&ent->world_transform, Y_AXIS, ent->rotation.y);
-    mat4_rotate_around_axis(&ent->world_transform, Z_AXIS, ent->rotation.z);
-    mat4_scale_by_vec3(&ent->world_transform, ent->scale);
-}
-
-void mesh_apply_transform(Mesh *mesh, Mat4 *transform) {
-    for (int i = 0; i < ARRAY_LENGTH_STACK(mesh->vertices); i++) {
-        for (int j = 0; j < ARRAY_LENGTH_STACK(mesh->vertices[i]); j++) {
-            Vec3 tmp;
-            tmp.x = mesh->vertices[i][0];
-            tmp.y = mesh->vertices[i][1];
-            tmp.z = mesh->vertices[i][2];
-            vec3_transform_by_mat4(&tmp, transform);
-            mesh->vertices[i][0] = tmp.x;
-            mesh->vertices[i][1] = tmp.y;
-            mesh->vertices[i][2] = tmp.z;
-        }
-    }
-}
-
-
-
 int main(void)
 {
-    return start_sdl_and_main_loop(main_loop);
+    return start_sdl_and_main_loop(main_loop, dispose);
 }
 
 static bool is_first_loop = true;
@@ -134,8 +41,8 @@ bool main_loop(float delta)
     if (is_first_loop)
     {
         is_first_loop = false;
-        gl_shader_program = init_shaders(vert_shader, frag_shader);
-        if (gl_shader_program == NULL)
+        gl_shader_program = init_shaders("assets/vert.glsl", "assets/frag.glsl");
+        if (gl_shader_program == 0)
         {
             return true;
         }
@@ -163,7 +70,7 @@ bool main_loop(float delta)
 
     camera.position.z += 0.02;
 
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    glViewport(0, 0, screen_width, screen_height);
 
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.3f, 0.2f, 0.5f, 0.f);
@@ -172,7 +79,7 @@ bool main_loop(float delta)
     glUseProgram(gl_shader_program);
 
     Mat4 projection;
-    set_projection_matrix(&projection, 90.0f, 0.1f, 100.0f, SCREEN_WIDTH, SCREEN_HEIGHT);
+    set_projection_matrix(&projection, 90.0f, 0.1f, 100.0f, screen_width, screen_height);
 
     GLuint id = glGetUniformLocation(gl_shader_program, "proj_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, projection);
@@ -193,6 +100,39 @@ bool main_loop(float delta)
     SDL_GL_SwapWindow(sdl_window);
 
     return false;
+}
+
+void camera_update_transform(Camera* camera) {
+    mat4_set_identity(&camera->world_transform);
+    mat4_translate_by_vec3(&camera->world_transform, camera->position);
+    mat4_rotate_around_axis(&camera->world_transform, X_AXIS, camera->rotation.x);
+    mat4_rotate_around_axis(&camera->world_transform, Y_AXIS, camera->rotation.y);
+    mat4_rotate_around_axis(&camera->world_transform, Z_AXIS, camera->rotation.z);
+    mat4_scale_by_vec3(&camera->world_transform, camera->scale);
+}
+
+void entity_update_transform(Entity* ent) {
+    mat4_set_identity(&ent->world_transform);
+    mat4_translate_by_vec3(&ent->world_transform, ent->position);
+    mat4_rotate_around_axis(&ent->world_transform, X_AXIS, ent->rotation.x);
+    mat4_rotate_around_axis(&ent->world_transform, Y_AXIS, ent->rotation.y);
+    mat4_rotate_around_axis(&ent->world_transform, Z_AXIS, ent->rotation.z);
+    mat4_scale_by_vec3(&ent->world_transform, ent->scale);
+}
+
+void mesh_apply_transform(Mesh* mesh, Mat4* transform) {
+    for (int i = 0; i < ARRAY_LENGTH_STACK(mesh->vertices); i++) {
+        for (int j = 0; j < ARRAY_LENGTH_STACK(mesh->vertices[i]); j++) {
+            Vec3 tmp;
+            tmp.x = mesh->vertices[i][0];
+            tmp.y = mesh->vertices[i][1];
+            tmp.z = mesh->vertices[i][2];
+            vec3_transform_by_mat4(&tmp, transform);
+            mesh->vertices[i][0] = tmp.x;
+            mesh->vertices[i][1] = tmp.y;
+            mesh->vertices[i][2] = tmp.z;
+        }
+    }
 }
 
 void bind_mesh_to_opengl(Mesh* mesh)
@@ -239,7 +179,7 @@ void check_gl_errors(char* context) {
     GLenum error = glGetError();
     if (GL_NO_ERROR != error) {
         printf("GL Error %x encountered in %s.\n", error, context);
-        exit(1);
+        exit_app();
     }
 }
 
@@ -253,8 +193,12 @@ void draw_mesh(Mesh* mesh)
     glBindVertexArray(0);
 }
 
-int init_shaders(char* vert_shader, char* frag_shader)
+int init_shaders(char* vert_shader_filename, char* frag_shader_filename)
 {
+    size_t size;
+    const char *vert_shader = read_file(vert_shader_filename, &size);
+    const char *frag_shader = read_file(frag_shader_filename, &size);
+
     GLuint new_program;
 
     GLint status;
@@ -270,7 +214,7 @@ int init_shaders(char* vert_shader, char* frag_shader)
         glGetShaderInfoLog(vertex_id, sizeof(err_buf), NULL, err_buf);
         err_buf[sizeof(err_buf) - 1] = '\0';
         fprintf(stderr, "Vertex shader compilation failed: %s\n", err_buf);
-        return NULL;
+        return 0;
     }
 
     // fragment
@@ -283,7 +227,7 @@ int init_shaders(char* vert_shader, char* frag_shader)
         glGetShaderInfoLog(fragment_id, sizeof(err_buf), NULL, err_buf);
         err_buf[sizeof(err_buf) - 1] = '\0';
         fprintf(stderr, "Fragment shader compilation failed: %s\n", err_buf);
-        return NULL;
+        return 0;
     }
 
     new_program = glCreateProgram();
@@ -298,10 +242,10 @@ int init_shaders(char* vert_shader, char* frag_shader)
     glGetProgramiv(new_program, GL_LINK_STATUS, &status);
     if (status != GL_TRUE)
     {
-        glGetShaderInfoLog(new_program, sizeof(err_buf), NULL, err_buf);
+        glGetProgramInfoLog(new_program, sizeof(err_buf), NULL, err_buf);
         err_buf[sizeof(err_buf) - 1] = '\0';
         fprintf(stderr, "Program (shader) linking failed: %s\n", err_buf);
-        return NULL;
+        return 0;
     }
 
     glDetachShader(new_program, fragment_id);
@@ -313,4 +257,9 @@ int init_shaders(char* vert_shader, char* frag_shader)
     glUseProgram(0);
 
     return new_program;
+}
+
+
+void dispose() {
+    
 }

@@ -3,7 +3,9 @@
 #define GL_GLEXT_PROTOTYPES 1
 #include <SDL_opengl.h>
 #include <stdio.h>
+#include <math.h>
 #include "math.h"
+#include "utils.h"
 
 typedef struct Color
 {
@@ -17,10 +19,12 @@ extern SDL_Window *sdl_window;
 extern SDL_Renderer *renderer;
 
 extern int current_FPS;
-extern int TARGET_FPS;
+extern int target_FPS;
 
-extern int SCREEN_WIDTH;
-extern int SCREEN_HEIGHT;
+extern int screen_width;
+extern int screen_height;
 
-int start_sdl_and_main_loop();
-void dispose();
+int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(void));
+int on_window_resize_event(void* data, SDL_Event* event);
+static void dispose();
+void exit_app();
