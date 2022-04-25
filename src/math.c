@@ -74,9 +74,9 @@ void vec3_set_unit(Vec3* v)
     float length = vec3_get_length(*v);
 
     if (length != 0.0f) {
-        v->x = v->x / length;
-        v->y = v->y / length;
-        v->z = v->z / length;
+        v->x /= length;
+        v->y /= length;
+        v->z /= length;
     }
 }
 
@@ -120,6 +120,12 @@ void vec3_sub(Vec3* dest, Vec3 a) {
     dest->z -= a.z;
 }
 
+void vec3_sub_vec_into(Vec3 a, Vec3 b, Vec3* dest) {
+    dest->x = a.x - b.x;
+    dest->y = a.y - b.y;
+    dest->z = a.z - b.z;
+}
+
 void vec3_cross(Vec3* dest, Vec3 a, Vec3 b) {
     dest->x = a.y * b.z - b.y * a.z;
     dest->y = a.z * b.x - b.z * a.x;
@@ -161,15 +167,15 @@ void set_projection_matrix(Mat4* mtx, float fov, float near, float far, int widt
 
 void mat4_scale_by_vec3(Mat4* mtx, Vec3 vec) {
     //    [column + row * 4]
-    (*mtx)[0 + 4 * 0] *= vec.x;
-    (*mtx)[1 + 4 * 0] *= vec.x;
-    (*mtx)[2 + 4 * 0] *= vec.x;
-    (*mtx)[0 + 4 * 1] *= vec.y;
-    (*mtx)[1 + 4 * 1] *= vec.y;
-    (*mtx)[2 + 4 * 1] *= vec.y;
-    (*mtx)[0 + 4 * 2] *= vec.z;
-    (*mtx)[1 + 4 * 2] *= vec.z;
-    (*mtx)[2 + 4 * 2] *= vec.z;
+    (*mtx)[0 + 0 * 4] *= vec.x;
+    (*mtx)[0 + 1 * 4] *= vec.x;
+    (*mtx)[0 + 2 * 4] *= vec.x;
+    (*mtx)[1 + 0 * 4] *= vec.y;
+    (*mtx)[1 + 1 * 4] *= vec.y;
+    (*mtx)[1 + 2 * 4] *= vec.y;
+    (*mtx)[2 + 0 * 4] *= vec.z;
+    (*mtx)[2 + 1 * 4] *= vec.z;
+    (*mtx)[2 + 2 * 4] *= vec.z;
 }
 
 void mat4_rotate_around_vec3(Mat4* mtx, struct Vec3* vec) {
@@ -185,41 +191,41 @@ void mat4_rotate_around_vec3(Mat4* mtx, struct Vec3* vec) {
 }
 
 void mat4_set_identity(Mat4* mtx) {
-    (*mtx)[0 + 4 * 0] = 1.0f;
-    (*mtx)[1 + 4 * 0] = 0.0f;
-    (*mtx)[2 + 4 * 0] = 0.0f;
-    (*mtx)[3 + 4 * 0] = 0.0f;
-    (*mtx)[0 + 4 * 1] = 0.0f;
-    (*mtx)[1 + 4 * 1] = 1.0f;
-    (*mtx)[2 + 4 * 1] = 0.0f;
-    (*mtx)[3 + 4 * 1] = 0.0f;
-    (*mtx)[0 + 4 * 2] = 0.0f;
-    (*mtx)[1 + 4 * 2] = 0.0f;
-    (*mtx)[2 + 4 * 2] = 1.0f;
-    (*mtx)[3 + 4 * 2] = 0.0f;
-    (*mtx)[0 + 4 * 3] = 0.0f;
-    (*mtx)[1 + 4 * 3] = 0.0f;
-    (*mtx)[2 + 4 * 3] = 0.0f;
-    (*mtx)[3 + 4 * 3] = 1.0f;
+    (*mtx)[0 + 0 * 4] = 1.0f;
+    (*mtx)[0 + 1 * 4] = 0.0f;
+    (*mtx)[0 + 2 * 4] = 0.0f;
+    (*mtx)[0 + 3 * 4] = 0.0f;
+    (*mtx)[1 + 0 * 4] = 0.0f;
+    (*mtx)[1 + 1 * 4] = 1.0f;
+    (*mtx)[1 + 2 * 4] = 0.0f;
+    (*mtx)[1 + 3 * 4] = 0.0f;
+    (*mtx)[2 + 0 * 4] = 0.0f;
+    (*mtx)[2 + 1 * 4] = 0.0f;
+    (*mtx)[2 + 2 * 4] = 1.0f;
+    (*mtx)[2 + 3 * 4] = 0.0f;
+    (*mtx)[3 + 0 * 4] = 0.0f;
+    (*mtx)[3 + 1 * 4] = 0.0f;
+    (*mtx)[3 + 2 * 4] = 0.0f;
+    (*mtx)[3 + 3 * 4] = 1.0f;
 }
 
 void mat4_copy_to(const Mat4* src, Mat4* dst) {
-    (*dst)[0 + 4 * 0] = (*src)[0 + 4 * 0];
-    (*dst)[1 + 4 * 0] = (*src)[1 + 4 * 0];
-    (*dst)[2 + 4 * 0] = (*src)[2 + 4 * 0];
-    (*dst)[3 + 4 * 0] = (*src)[3 + 4 * 0];
-    (*dst)[0 + 4 * 1] = (*src)[0 + 4 * 1];
-    (*dst)[1 + 4 * 1] = (*src)[1 + 4 * 1];
-    (*dst)[2 + 4 * 1] = (*src)[2 + 4 * 1];
-    (*dst)[3 + 4 * 1] = (*src)[3 + 4 * 1];
-    (*dst)[0 + 4 * 2] = (*src)[0 + 4 * 2];
-    (*dst)[1 + 4 * 2] = (*src)[1 + 4 * 2];
-    (*dst)[2 + 4 * 2] = (*src)[2 + 4 * 2];
-    (*dst)[3 + 4 * 2] = (*src)[3 + 4 * 2];
-    (*dst)[0 + 4 * 3] = (*src)[0 + 4 * 3];
-    (*dst)[1 + 4 * 3] = (*src)[1 + 4 * 3];
-    (*dst)[2 + 4 * 3] = (*src)[2 + 4 * 3];
-    (*dst)[3 + 4 * 3] = (*src)[3 + 4 * 3];
+    (*dst)[0 + 0 * 4] = (*src)[0 + 0 * 4];
+    (*dst)[0 + 1 * 4] = (*src)[0 + 1 * 4];
+    (*dst)[0 + 2 * 4] = (*src)[0 + 2 * 4];
+    (*dst)[0 + 3 * 4] = (*src)[0 + 3 * 4];
+    (*dst)[1 + 0 * 4] = (*src)[1 + 0 * 4];
+    (*dst)[1 + 1 * 4] = (*src)[1 + 1 * 4];
+    (*dst)[1 + 2 * 4] = (*src)[1 + 2 * 4];
+    (*dst)[1 + 3 * 4] = (*src)[1 + 3 * 4];
+    (*dst)[2 + 0 * 4] = (*src)[2 + 0 * 4];
+    (*dst)[2 + 1 * 4] = (*src)[2 + 1 * 4];
+    (*dst)[2 + 2 * 4] = (*src)[2 + 2 * 4];
+    (*dst)[2 + 3 * 4] = (*src)[2 + 3 * 4];
+    (*dst)[3 + 0 * 4] = (*src)[3 + 0 * 4];
+    (*dst)[3 + 1 * 4] = (*src)[3 + 1 * 4];
+    (*dst)[3 + 2 * 4] = (*src)[3 + 2 * 4];
+    (*dst)[3 + 3 * 4] = (*src)[3 + 3 * 4];
 }
 
 Vec3 X_AXIS = { 1.0f, 0.0f, 0.0f };
@@ -270,28 +276,60 @@ void mat4_set_to_rotation_matrix(Mat4* mtx, Vec3 axis, float angle_degrees) {
 
     oneMinusCos = 1.0 - c;
 
-    (*mtx)[0 + 4 * 0] = oneMinusCos * axis.x * axis.x + c;
-    (*mtx)[1 + 4 * 0] = oneMinusCos * axis.x * axis.y + s * axis.z;
-    (*mtx)[2 + 4 * 0] = oneMinusCos * axis.x * axis.z - s * axis.y;
-    (*mtx)[3 + 4 * 0] = 0.0f;
-    (*mtx)[0 + 4 * 1] = oneMinusCos * axis.x * axis.y - s * axis.z;
-    (*mtx)[1 + 4 * 1] = oneMinusCos * axis.y * axis.y + c;
-    (*mtx)[2 + 4 * 1] = oneMinusCos * axis.y * axis.z + s * axis.x;
-    (*mtx)[3 + 4 * 1] = 0.0f;
-    (*mtx)[0 + 4 * 2] = oneMinusCos * axis.x * axis.z + s * axis.y;
-    (*mtx)[1 + 4 * 2] = oneMinusCos * axis.y * axis.z - s * axis.x;
-    (*mtx)[2 + 4 * 2] = oneMinusCos * axis.z * axis.z + c;
-    (*mtx)[3 + 4 * 2] = 0.0f;
-    (*mtx)[0 + 4 * 3] = 0.0f;
-    (*mtx)[1 + 4 * 3] = 0.0f;
-    (*mtx)[2 + 4 * 3] = 0.0f;
-    (*mtx)[3 + 4 * 3] = 1.0f;
+    (*mtx)[0 + 0 * 4] = oneMinusCos * axis.x * axis.x + c;
+    (*mtx)[0 + 1 * 4] = oneMinusCos * axis.x * axis.y + s * axis.z;
+    (*mtx)[0 + 2 * 4] = oneMinusCos * axis.x * axis.z - s * axis.y;
+    (*mtx)[0 + 3 * 4] = 0.0f;
+    (*mtx)[1 + 0 * 4] = oneMinusCos * axis.x * axis.y - s * axis.z;
+    (*mtx)[1 + 1 * 4] = oneMinusCos * axis.y * axis.y + c;
+    (*mtx)[1 + 2 * 4] = oneMinusCos * axis.y * axis.z + s * axis.x;
+    (*mtx)[1 + 3 * 4] = 0.0f;
+    (*mtx)[2 + 0 * 4] = oneMinusCos * axis.x * axis.z + s * axis.y;
+    (*mtx)[2 + 1 * 4] = oneMinusCos * axis.y * axis.z - s * axis.x;
+    (*mtx)[2 + 2 * 4] = oneMinusCos * axis.z * axis.z + c;
+    (*mtx)[2 + 3 * 4] = 0.0f;
+    (*mtx)[3 + 0 * 4] = 0.0f;
+    (*mtx)[3 + 1 * 4] = 0.0f;
+    (*mtx)[3 + 2 * 4] = 0.0f;
+    (*mtx)[3 + 3 * 4] = 1.0f;
 }
 
 void mat4_translate_by_vec3(Mat4* mtx, Vec3 vec) {
     (*mtx)[0 + 4 * 3] += vec.x;
     (*mtx)[1 + 4 * 3] += vec.y;
     (*mtx)[2 + 4 * 3] += vec.z;
+}
+
+void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up) {
+    Vec3 z_axis;
+    vec3_sub_vec_into(look_at, position, &z_axis);
+    vec3_set_unit(&z_axis);
+
+    Vec3 x_axis;
+    vec3_cross(&x_axis, z_axis, up);
+    vec3_set_unit(&x_axis);
+
+    Vec3 y_axis;
+    vec3_cross(&y_axis, x_axis, z_axis);
+
+    vec3_scl(&z_axis, -1.f, -1.f, -1.f);
+
+    (*mtx)[0 + 0 * 4] = x_axis.x;
+    (*mtx)[0 + 1 * 4] = x_axis.y;
+    (*mtx)[0 + 2 * 4] = x_axis.z;
+    (*mtx)[0 + 3 * 4] = -vec3_dot_product(x_axis, position);
+    (*mtx)[1 + 0 * 4] = y_axis.x;
+    (*mtx)[1 + 1 * 4] = y_axis.y;
+    (*mtx)[1 + 2 * 4] = y_axis.z;
+    (*mtx)[1 + 3 * 4] = -vec3_dot_product(y_axis, position);
+    (*mtx)[2 + 0 * 4] = z_axis.x;
+    (*mtx)[2 + 1 * 4] = z_axis.y;
+    (*mtx)[2 + 2 * 4] = z_axis.z;
+    (*mtx)[2 + 3 * 4] = -vec3_dot_product(z_axis, position);
+    (*mtx)[3 + 0 * 4] = 0.f;
+    (*mtx)[3 + 1 * 4] = 0.f;
+    (*mtx)[3 + 2 * 4] = 0.f;
+    (*mtx)[3 + 3 * 4] = 1.f;
 }
 
 void vec3_transform_by_mat4(Vec3* vec, Mat4* mtx)

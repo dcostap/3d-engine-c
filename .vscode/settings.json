@@ -22,7 +22,7 @@
         "cstdlib": "c",
         "setup.h": "c",
         "engine.h": "c",
-        "math.h": "c",
+        "utils_3d.h": "c",
         "mario.h": "c",
         "sdl_render.h": "c",
         "stdio.h": "c",
@@ -32,9 +32,8 @@
         "common.h": "c",
         "sdl_opengles.h": "c",
         "glext.h": "c",
-        "*.inc": "c",
-        "utils.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "glew.h": "c"
     },
     "makefile.launchConfigurations": [
         {

@@ -72,11 +72,11 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
 
         current_FPS = (int)(1 / (elapsed / 1000.0f));
 
-        if (current_FPS != last_current_FPS)
-        {
-            printf("FPS: %d\n", current_FPS);
-            fflush(stdout);
-        }
+        // if (current_FPS != last_current_FPS)
+        // {
+        //     printf("FPS: %d\n", current_FPS);
+        //     fflush(stdout);
+        // }
         last_current_FPS = current_FPS;
 
         // clamp delta if program lags too much

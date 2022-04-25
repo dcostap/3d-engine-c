@@ -3,32 +3,31 @@
 
 GLuint gl_shader_program;
 
-Camera camera = {
-    .scale = {
-        1.0f, 1.0f, 1.0f
-    }
-};
+Camera camera;
 
 SDL_KeyCode keys_pressed[100];
 int keys_pressed_size = 0;
 
-bool is_key_pressed(SDL_KeyCode key) {
-    for (int i = 0; i < keys_pressed_size; i++) {
-        if (keys_pressed[i] == key) return true;
+bool is_key_pressed(SDL_KeyCode key)
+{
+    for (int i = 0; i < keys_pressed_size; i++)
+    {
+        if (keys_pressed[i] == key)
+            return true;
     }
     return false;
 }
 
 Entity ent1 = {
-    .position = { 0.0f, 0.0f, 0.0f },
-    .rotation = { 0.0f, 0.0f, 0.0f },
-    .scale = { 1.0f, 1.0f, 1.0f },
+    .position = {0.0f, 0.0f, 0.0f},
+    .rotation = {0.0f, 0.0f, 0.0f},
+    .scale = {1.0f, 1.0f, 1.0f},
 };
 
 Entity ent2 = {
-    .position = { 20.0f, 0.0f, 0.0f },
-    .rotation = { 0.0f, 0.0f, 0.0f },
-    .scale = { 1.0f, 1.0f, 1.0f },
+    .position = {20.0f, 0.0f, 0.0f},
+    .rotation = {0.0f, 0.0f, 0.0f},
+    .scale = {1.0f, 1.0f, 1.0f},
 };
 
 int main(void)
@@ -54,7 +53,7 @@ bool main_loop(float delta)
 
         bind_mesh_to_opengl(&mario);
 
-        camera.position.z = 1.f;
+        camera.position.z = 15.f;
     }
 
     SDL_Event e;
@@ -72,11 +71,15 @@ bool main_loop(float delta)
         else if (e.type == SDL_KEYUP && e.key.repeat == 0)
         {
             SDL_KeyCode key = e.key.keysym.sym;
-            for (int i = 0; i < keys_pressed_size; i++) {
-                if (keys_pressed[i] == key) {
+            for (int i = 0; i < keys_pressed_size; i++)
+            {
+                if (keys_pressed[i] == key)
+                {
                     // displace the rest of the array 1 spot to the left
-                    if (i < keys_pressed_size - 1) {
-                        for (int j = i; j < keys_pressed_size - 1; j++) {
+                    if (i < keys_pressed_size - 1)
+                    {
+                        for (int j = i; j < keys_pressed_size - 1; j++)
+                        {
                             keys_pressed[j] = keys_pressed[j + 1];
                         }
                     }
@@ -87,20 +90,32 @@ bool main_loop(float delta)
         }
     }
 
-    float cam_speed = 0.1f;
-    float cam_rot_speed = 2.0f;
+    float cam_speed = 0.15f;
+    float cam_rot_speed = 1.5f;
 
     if (is_key_pressed(SDLK_ESCAPE))
         return true;
 
     if (is_key_pressed(SDLK_w))
-        camera.position.z -= cam_speed;
+    {
+        camera.position.z -= cos_deg(camera.rotation.y);
+        camera.position.x += sin_deg(camera.rotation.y);
+    }
     if (is_key_pressed(SDLK_s))
-        camera.position.z += cam_speed;
+    {
+        camera.position.z += cos_deg(camera.rotation.y);
+        camera.position.x -= sin_deg(camera.rotation.y);
+    }
     if (is_key_pressed(SDLK_a))
-        camera.position.x -= cam_speed;
+    {
+        camera.position.z -= sin_deg(camera.rotation.y);
+        camera.position.x -= cos_deg(camera.rotation.y);
+    }
     if (is_key_pressed(SDLK_d))
-        camera.position.x += cam_speed;
+    {
+        camera.position.z += sin_deg(camera.rotation.y);
+        camera.position.x += cos_deg(camera.rotation.y);
+    }
     if (is_key_pressed(SDLK_q))
         camera.position.y += cam_speed;
     if (is_key_pressed(SDLK_e))
@@ -139,7 +154,7 @@ bool main_loop(float delta)
 
     // vec3_add_values(&ent1.scale, -0.01f, -0.01f, -0.01f);
 
-    // ent1.rotation.z += 2.0f;
+    ent2.rotation.y += 2.0f;
     entity_update_transform(&ent1);
     entity_update_transform(&ent2);
 
@@ -153,32 +168,55 @@ bool main_loop(float delta)
     return false;
 }
 
-void camera_update_transform(Camera* camera) {
+void camera_update_transform(Camera *camera)
+{
+    Mat4 rot;
+    mat4_set_identity(&rot);
+    mat4_rotate_around_axis(&rot, X_AXIS, camera->rotation.x * -1);
+    mat4_rotate_around_axis(&rot, Y_AXIS, camera->rotation.y * -1);
+    mat4_rotate_around_axis(&rot, Z_AXIS, camera->rotation.z * -1);
+
+    Mat4 trans;
+    mat4_set_identity(&trans);
+
+    vec3_scl(&camera->position, -1.f, -1.f, -1.f);
+    mat4_translate_by_vec3(&trans, camera->position);
+    vec3_scl(&camera->position, -1.f, -1.f, -1.f);
+
     mat4_set_identity(&camera->world_transform);
-
-    mat4_rotate_around_axis(&camera->world_transform, X_AXIS, camera->rotation.x);
-    mat4_rotate_around_axis(&camera->world_transform, Y_AXIS, camera->rotation.y);
-    mat4_rotate_around_axis(&camera->world_transform, Z_AXIS, camera->rotation.z);
-
-    vec3_scl(&camera->position, -1.f, -1.f, -1.f);
-    mat4_translate_by_vec3(&camera->world_transform, camera->position);
-    vec3_scl(&camera->position, -1.f, -1.f, -1.f);
-
-    mat4_scale_by_vec3(&camera->world_transform, camera->scale);
+    mat4_mul(&camera->world_transform, rot);
+    mat4_mul(&camera->world_transform, trans);
 }
 
-void entity_update_transform(Entity* ent) {
+void entity_update_transform(Entity *ent)
+{
+    Mat4 rot;
+    mat4_set_identity(&rot);
+    mat4_rotate_around_axis(&rot, X_AXIS, ent->rotation.x);
+    mat4_rotate_around_axis(&rot, Y_AXIS, ent->rotation.y);
+    mat4_rotate_around_axis(&rot, Z_AXIS, ent->rotation.z);
+
+    Mat4 trans;
+    mat4_set_identity(&trans);
+    mat4_translate_by_vec3(&trans, ent->position);
+
+    Mat4 scl;
+    mat4_set_identity(&scl);
+    mat4_scale_by_vec3(&scl, ent->scale);
+    mat4_mul(&ent->world_transform, &scl);
+
     mat4_set_identity(&ent->world_transform);
-    mat4_translate_by_vec3(&ent->world_transform, ent->position);
-    mat4_rotate_around_axis(&ent->world_transform, X_AXIS, ent->rotation.x);
-    mat4_rotate_around_axis(&ent->world_transform, Y_AXIS, ent->rotation.y);
-    mat4_rotate_around_axis(&ent->world_transform, Z_AXIS, ent->rotation.z);
-    mat4_scale_by_vec3(&ent->world_transform, ent->scale);
+    mat4_mul(&ent->world_transform, trans);
+    mat4_mul(&ent->world_transform, rot);
+    mat4_mul(&ent->world_transform, scl);
 }
 
-void mesh_apply_transform(Mesh* mesh, Mat4* transform) {
-    for (int i = 0; i < ARRAY_LENGTH_STACK(mesh->vertices); i++) {
-        for (int j = 0; j < ARRAY_LENGTH_STACK(mesh->vertices[i]); j++) {
+void mesh_apply_transform(Mesh *mesh, Mat4 *transform)
+{
+    for (int i = 0; i < ARRAY_LENGTH_STACK(mesh->vertices); i++)
+    {
+        for (int j = 0; j < ARRAY_LENGTH_STACK(mesh->vertices[i]); j++)
+        {
             Vec3 tmp;
             tmp.x = mesh->vertices[i][0];
             tmp.y = mesh->vertices[i][1];
@@ -191,7 +229,7 @@ void mesh_apply_transform(Mesh* mesh, Mat4* transform) {
     }
 }
 
-void bind_mesh_to_opengl(Mesh* mesh)
+void bind_mesh_to_opengl(Mesh *mesh)
 {
     glGenVertexArrays(1, &mesh->vao);
     glBindVertexArray(mesh->vao);
@@ -208,7 +246,7 @@ void bind_mesh_to_opengl(Mesh* mesh)
 
     // Bind vertex position attribute
     GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
-    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
     glEnableVertexAttribArray(pos_attr_loc);
 
     // Bind vertex texture coordinate attribute
@@ -219,22 +257,25 @@ void bind_mesh_to_opengl(Mesh* mesh)
     glBindVertexArray(0);
 }
 
-void draw_entity(Entity* ent) {
+void draw_entity(Entity *ent)
+{
     GLuint id = glGetUniformLocation(gl_shader_program, "local_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
 
     draw_mesh(ent->mesh);
 }
 
-void check_gl_errors(char* context) {
+void check_gl_errors(char *context)
+{
     GLenum error = glGetError();
-    if (GL_NO_ERROR != error) {
+    if (GL_NO_ERROR != error)
+    {
         printf("GL Error %x encountered in %s.\n", error, context);
         exit_app();
     }
 }
 
-void draw_mesh(Mesh* mesh)
+void draw_mesh(Mesh *mesh)
 {
     glBindVertexArray(mesh->vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
@@ -244,11 +285,11 @@ void draw_mesh(Mesh* mesh)
     glBindVertexArray(0);
 }
 
-int init_shaders(char* vert_shader_filename, char* frag_shader_filename)
+int init_shaders(char *vert_shader_filename, char *frag_shader_filename)
 {
     size_t size;
-    const char* vert_shader = read_file(vert_shader_filename, &size);
-    const char* frag_shader = read_file(frag_shader_filename, &size);
+    const char *vert_shader = read_file(vert_shader_filename, &size);
+    const char *frag_shader = read_file(frag_shader_filename, &size);
 
     GLuint new_program;
 
@@ -310,7 +351,6 @@ int init_shaders(char* vert_shader_filename, char* frag_shader_filename)
     return new_program;
 }
 
-
-void dispose() {
-
+void dispose()
+{
 }

@@ -23,7 +23,6 @@ typedef struct Entity
 typedef struct Camera {
     Vec3 position;
     Vec3 rotation;
-    Vec3 scale;
     Mat4 world_transform;
 } Camera;
 
