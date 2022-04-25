@@ -8,9 +8,9 @@ int current_FPS = 0;
 
 static void (*on_dispose_handler)(void);
 
-SDL_Window* sdl_window;
-SDL_Surface* screen_surface;
-SDL_Renderer* renderer;
+SDL_Window *sdl_window;
+SDL_Surface *screen_surface;
+SDL_Renderer *renderer;
 SDL_GLContext context;
 
 int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(void))
@@ -23,7 +23,7 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     sdl_window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        screen_width, screen_height, SDL_WINDOW_OPENGL);
+                                  screen_width, screen_height, SDL_WINDOW_OPENGL);
 
     SDL_SetWindowResizable(sdl_window, true);
     SDL_AddEventWatch(on_window_resize_event, sdl_window);
@@ -47,7 +47,8 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     }
 
     // Use Vsync
-    if (SDL_GL_SetSwapInterval(1) == -1) {
+    if (SDL_GL_SetSwapInterval(1) == -1)
+    {
         printf("Error setting Vsync: %s\n", SDL_GetError());
         return 1;
     }
@@ -97,20 +98,24 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     return 0;
 }
 
-int on_window_resize_event(void* data, SDL_Event* event) {
+int on_window_resize_event(void *data, SDL_Event *event)
+{
     if (event->type == SDL_WINDOWEVENT &&
-        event->window.event == SDL_WINDOWEVENT_RESIZED) {
-        SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
+        event->window.event == SDL_WINDOWEVENT_RESIZED)
+    {
+        SDL_Window *win = SDL_GetWindowFromID(event->window.windowID);
 
         SDL_GetWindowSize(win, &screen_width, &screen_height);
-        if (win == (SDL_Window*)data) {
+        if (win == (SDL_Window *)data)
+        {
             printf("<Resize Event>\n");
         }
     }
     return 0;
 }
 
-void exit_app() {
+void exit_app()
+{
     dispose();
     exit(0);
 }

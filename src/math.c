@@ -27,7 +27,7 @@ float sin_deg(float degrees)
 
 #pragma region VECTORS
 
-void rotate_vector(Vec3* vector, float rotation_x, float rotation_y, float rotation_z)
+void rotate_vector(Vec3 *vector, float rotation_x, float rotation_y, float rotation_z)
 {
     float cosa = cos_deg(rotation_z);
     float sina = sin_deg(rotation_z);
@@ -69,64 +69,74 @@ float vec3_get_length(Vec3 v)
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-void vec3_set_unit(Vec3* v)
+void vec3_set_unit(Vec3 *v)
 {
     float length = vec3_get_length(*v);
 
-    if (length != 0.0f) {
+    if (length != 0.0f)
+    {
         v->x /= length;
         v->y /= length;
         v->z /= length;
     }
 }
 
-void vec3_set(Vec3* dest, Vec3 src) {
+void vec3_set(Vec3 *dest, Vec3 src)
+{
     dest->x = src.x;
     dest->y = src.y;
     dest->z = src.z;
 }
 
-void vec3_scl(Vec3* dest, float x, float y, float z) {
+void vec3_scl(Vec3 *dest, float x, float y, float z)
+{
     dest->x *= x;
     dest->y *= y;
     dest->z *= z;
 }
 
-void vec3_set_values(Vec3* dest, float x, float y, float z) {
+void vec3_set_values(Vec3 *dest, float x, float y, float z)
+{
     dest->x = x;
     dest->y = y;
     dest->z = z;
 }
 
-void vec3_add(Vec3* dest, Vec3 a) {
+void vec3_add(Vec3 *dest, Vec3 a)
+{
     dest->x += a.x;
     dest->y += a.y;
     dest->z += a.z;
 }
 
-void vec3_add_values(Vec3* dest, float x_add, float y_add, float z_add) {
+void vec3_add_values(Vec3 *dest, float x_add, float y_add, float z_add)
+{
     dest->x += x_add;
     dest->y += y_add;
     dest->z += z_add;
 }
 
-void print_vector(Vec3 vec) {
+void print_vector(Vec3 vec)
+{
     printf("[%.2f, %.2f, %.2f]\n", vec.x, vec.y, vec.z);
 }
 
-void vec3_sub(Vec3* dest, Vec3 a) {
+void vec3_sub(Vec3 *dest, Vec3 a)
+{
     dest->x -= a.x;
     dest->y -= a.y;
     dest->z -= a.z;
 }
 
-void vec3_sub_vec_into(Vec3 a, Vec3 b, Vec3* dest) {
+void vec3_sub_vec_into(Vec3 a, Vec3 b, Vec3 *dest)
+{
     dest->x = a.x - b.x;
     dest->y = a.y - b.y;
     dest->z = a.z - b.z;
 }
 
-void vec3_cross(Vec3* dest, Vec3 a, Vec3 b) {
+void vec3_cross(Vec3 *dest, Vec3 a, Vec3 b)
+{
     dest->x = a.y * b.z - b.y * a.z;
     dest->y = a.z * b.x - b.z * a.x;
     dest->z = a.x * b.y - b.x * a.y;
@@ -136,10 +146,13 @@ void vec3_cross(Vec3* dest, Vec3 a, Vec3 b) {
 
 #pragma region MATRICES
 
-void print_matrix(Mat4 mtx) {
-    for (int i = 0; i < 4; i++) {
+void print_matrix(Mat4 mtx)
+{
+    for (int i = 0; i < 4; i++)
+    {
         printf("[");
-        for (int j = 0; j < 4; j++) {
+        for (int j = 0; j < 4; j++)
+        {
             printf("%f, ", mtx[j + 4 * i]);
         }
         printf("]\n");
@@ -147,7 +160,8 @@ void print_matrix(Mat4 mtx) {
     printf("\n");
 }
 
-void set_projection_matrix(Mat4* mtx, float fov, float near, float far, int width, int height) {
+void set_projection_matrix(Mat4 *mtx, float fov, float near, float far, int width, int height)
+{
     mat4_set_identity(mtx);
 
     float aspect_ratio = (float)width / (float)height;
@@ -165,7 +179,8 @@ void set_projection_matrix(Mat4* mtx, float fov, float near, float far, int widt
     (*mtx)[3 + 3 * 4] = 0.0f;
 }
 
-void mat4_scale_by_vec3(Mat4* mtx, Vec3 vec) {
+void mat4_scale_by_vec3(Mat4 *mtx, Vec3 vec)
+{
     //    [column + row * 4]
     (*mtx)[0 + 0 * 4] *= vec.x;
     (*mtx)[0 + 1 * 4] *= vec.x;
@@ -178,19 +193,24 @@ void mat4_scale_by_vec3(Mat4* mtx, Vec3 vec) {
     (*mtx)[2 + 2 * 4] *= vec.z;
 }
 
-void mat4_rotate_around_vec3(Mat4* mtx, struct Vec3* vec) {
-    if (vec->x != 0.0f) {
+void mat4_rotate_around_vec3(Mat4 *mtx, struct Vec3 *vec)
+{
+    if (vec->x != 0.0f)
+    {
         mat4_rotate_around_axis(mtx, X_AXIS, vec->x);
     }
-    if (vec->y != 0.0f) {
+    if (vec->y != 0.0f)
+    {
         mat4_rotate_around_axis(mtx, Y_AXIS, vec->y);
     }
-    if (vec->z != 0.0f) {
+    if (vec->z != 0.0f)
+    {
         mat4_rotate_around_axis(mtx, Z_AXIS, vec->z);
     }
 }
 
-void mat4_set_identity(Mat4* mtx) {
+void mat4_set_identity(Mat4 *mtx)
+{
     (*mtx)[0 + 0 * 4] = 1.0f;
     (*mtx)[0 + 1 * 4] = 0.0f;
     (*mtx)[0 + 2 * 4] = 0.0f;
@@ -209,7 +229,8 @@ void mat4_set_identity(Mat4* mtx) {
     (*mtx)[3 + 3 * 4] = 1.0f;
 }
 
-void mat4_copy_to(const Mat4* src, Mat4* dst) {
+void mat4_copy_to(const Mat4 *src, Mat4 *dst)
+{
     (*dst)[0 + 0 * 4] = (*src)[0 + 0 * 4];
     (*dst)[0 + 1 * 4] = (*src)[0 + 1 * 4];
     (*dst)[0 + 2 * 4] = (*src)[0 + 2 * 4];
@@ -228,30 +249,34 @@ void mat4_copy_to(const Mat4* src, Mat4* dst) {
     (*dst)[3 + 3 * 4] = (*src)[3 + 3 * 4];
 }
 
-Vec3 X_AXIS = { 1.0f, 0.0f, 0.0f };
-Vec3 Y_AXIS = { 0.0f, 1.0f, 0.0f };
-Vec3 Z_AXIS = { 0.0f, 0.0f, 1.0f };
+Vec3 X_AXIS = {1.0f, 0.0f, 0.0f};
+Vec3 Y_AXIS = {0.0f, 1.0f, 0.0f};
+Vec3 Z_AXIS = {0.0f, 0.0f, 1.0f};
 
 /**
  * Rotates a mat4f matrix about a given axis
  * by a set angle in degrees.
  */
-void mat4_rotate_around_axis(Mat4* mtx, Vec3 axis, float angle_degrees) {
+void mat4_rotate_around_axis(Mat4 *mtx, Vec3 axis, float angle_degrees)
+{
     Mat4 rMat;
     mat4_set_to_rotation_matrix(&rMat, axis, angle_degrees);
     mat4_mul(mtx, &rMat);
 }
 
-void mat4_mul(Mat4* m1, const Mat4* m2) {
+void mat4_mul(Mat4 *m1, const Mat4 *m2)
+{
     float tmp[4];
-    for (int j = 0; j < 4; j++) {
+    for (int j = 0; j < 4; j++)
+    {
         tmp[0] = (*m1)[j];
         tmp[1] = (*m1)[4 + j];
         tmp[2] = (*m1)[8 + j];
         tmp[3] = (*m1)[12 + j];
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
+        {
             (*m1)[4 * i + j] = (*m2)[4 * i] * tmp[0] + (*m2)[4 * i + 1] * tmp[1] +
-                (*m2)[4 * i + 2] * tmp[2] + (*m2)[4 * i + 3] * tmp[3];
+                               (*m2)[4 * i + 2] * tmp[2] + (*m2)[4 * i + 3] * tmp[3];
         }
     }
 }
@@ -268,7 +293,8 @@ void mat4_mul(Mat4* m1, const Mat4* m2) {
  * | (1-c)xz-sy (1-c)xy-sz (1-c)x^2+c 0 |
  * |      0          0          0     1 |
  */
-void mat4_set_to_rotation_matrix(Mat4* mtx, Vec3 axis, float angle_degrees) {
+void mat4_set_to_rotation_matrix(Mat4 *mtx, Vec3 axis, float angle_degrees)
+{
     float oneMinusCos;
 
     float s = sin_deg(angle_degrees);
@@ -294,13 +320,15 @@ void mat4_set_to_rotation_matrix(Mat4* mtx, Vec3 axis, float angle_degrees) {
     (*mtx)[3 + 3 * 4] = 1.0f;
 }
 
-void mat4_translate_by_vec3(Mat4* mtx, Vec3 vec) {
+void mat4_translate_by_vec3(Mat4 *mtx, Vec3 vec)
+{
     (*mtx)[0 + 4 * 3] += vec.x;
     (*mtx)[1 + 4 * 3] += vec.y;
     (*mtx)[2 + 4 * 3] += vec.z;
 }
 
-void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up) {
+void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up)
+{
     Vec3 z_axis;
     vec3_sub_vec_into(look_at, position, &z_axis);
     vec3_set_unit(&z_axis);
@@ -332,7 +360,7 @@ void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up) {
     (*mtx)[3 + 3 * 4] = 1.f;
 }
 
-void vec3_transform_by_mat4(Vec3* vec, Mat4* mtx)
+void vec3_transform_by_mat4(Vec3 *vec, Mat4 *mtx)
 {
     float tmp[4];
     for (int i = 0; i < 4; ++i)
@@ -342,6 +370,5 @@ void vec3_transform_by_mat4(Vec3* vec, Mat4* mtx)
     vec->y = tmp[1] / tmp[3];
     vec->z = tmp[2] / tmp[3];
 }
-
 
 #pragma endregion
