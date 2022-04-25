@@ -55,10 +55,10 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     {
         double elapsed = SDL_GetTicks() - last_time;
 
-        while ((SDL_GetTicks() - last_time) < (1000.0f / target_FPS))
-        {
-            SDL_Delay(1);
-        }
+        // while ((SDL_GetTicks() - last_time) < (1000.0f / target_FPS))
+        // {
+        //     SDL_Delay(1);
+        // }
 
         if (elapsed < 1000.0f / target_FPS)
         {

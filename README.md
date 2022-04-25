@@ -1,5 +1,5 @@
 ## Workspace Setup
-All the SDL libraries used are included in the `include` folder as _git submodules_ that point to the official repos. You need to clone their source code:
+All the libraries linked against are included in the `include` folder as _git submodules_ that point to the official repos. You need to clone their source code:
 
     git submodule update --init
 
