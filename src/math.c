@@ -222,36 +222,17 @@ void mat4_copy_to(const Mat4* src, Mat4* dst) {
     (*dst)[3 + 4 * 3] = (*src)[3 + 4 * 3];
 }
 
+Vec3 X_AXIS = { 1.0f, 0.0f, 0.0f };
+Vec3 Y_AXIS = { 0.0f, 1.0f, 0.0f };
+Vec3 Z_AXIS = { 0.0f, 0.0f, 1.0f };
+
 /**
  * Rotates a mat4f matrix about a given axis
  * by a set angle in degrees.
  */
-void mat4_rotate_around_axis(Mat4* mtx, enum RotationAxis axis, float angle_degrees) {
-    struct Vec3 rot;
-
-    switch (axis) {
-    case X_AXIS:
-        rot.x = 1.0f;
-        rot.y = 0.0f;
-        rot.z = 0.0f;
-        break;
-    case Y_AXIS:
-        rot.x = 0.0f;
-        rot.y = 1.0f;
-        rot.z = 0.0f;
-        break;
-    case Z_AXIS:
-        rot.x = 0.0f;
-        rot.y = 0.0f;
-        rot.z = 1.0f;
-        break;
-    default:
-        printf("Bad axis number\n");
-        break;
-    }
-
+void mat4_rotate_around_axis(Mat4* mtx, Vec3 axis, float angle_degrees) {
     Mat4 rMat;
-    mat4_set_to_rotation_matrix(&rMat, rot, angle_degrees);
+    mat4_set_to_rotation_matrix(&rMat, axis, angle_degrees);
     mat4_mul(mtx, &rMat);
 }
 
@@ -289,17 +270,17 @@ void mat4_set_to_rotation_matrix(Mat4* mtx, Vec3 axis, float angle_degrees) {
 
     oneMinusCos = 1.0 - c;
 
-    (*mtx)[0 + 4 * 0] = oneMinusCos * axis.z * axis.z + c;
-    (*mtx)[1 + 4 * 0] = oneMinusCos * axis.z * axis.y + s * axis.x;
-    (*mtx)[2 + 4 * 0] = oneMinusCos * axis.z * axis.x - s * axis.y;
+    (*mtx)[0 + 4 * 0] = oneMinusCos * axis.x * axis.x + c;
+    (*mtx)[1 + 4 * 0] = oneMinusCos * axis.x * axis.y + s * axis.z;
+    (*mtx)[2 + 4 * 0] = oneMinusCos * axis.x * axis.z - s * axis.y;
     (*mtx)[3 + 4 * 0] = 0.0f;
-    (*mtx)[0 + 4 * 1] = oneMinusCos * axis.z * axis.y - s * axis.x;
+    (*mtx)[0 + 4 * 1] = oneMinusCos * axis.x * axis.y - s * axis.z;
     (*mtx)[1 + 4 * 1] = oneMinusCos * axis.y * axis.y + c;
-    (*mtx)[2 + 4 * 1] = oneMinusCos * axis.y * axis.x + s * axis.z;
+    (*mtx)[2 + 4 * 1] = oneMinusCos * axis.y * axis.z + s * axis.x;
     (*mtx)[3 + 4 * 1] = 0.0f;
-    (*mtx)[0 + 4 * 2] = oneMinusCos * axis.z * axis.x + s * axis.y;
-    (*mtx)[1 + 4 * 2] = oneMinusCos * axis.y * axis.x - s * axis.z;
-    (*mtx)[2 + 4 * 2] = oneMinusCos * axis.x * axis.x + c;
+    (*mtx)[0 + 4 * 2] = oneMinusCos * axis.x * axis.z + s * axis.y;
+    (*mtx)[1 + 4 * 2] = oneMinusCos * axis.y * axis.z - s * axis.x;
+    (*mtx)[2 + 4 * 2] = oneMinusCos * axis.z * axis.z + c;
     (*mtx)[3 + 4 * 2] = 0.0f;
     (*mtx)[0 + 4 * 3] = 0.0f;
     (*mtx)[1 + 4 * 3] = 0.0f;

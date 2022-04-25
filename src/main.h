@@ -17,7 +17,7 @@ typedef struct Entity
     Vec3 rotation;
     Vec3 scale;
     Mat4 world_transform;
-    Mesh mesh;
+    Mesh *mesh;
 } Entity;
 
 typedef struct Camera {

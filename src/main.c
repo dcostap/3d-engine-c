@@ -25,6 +25,12 @@ Entity ent1 = {
     .scale = { 1.0f, 1.0f, 1.0f },
 };
 
+Entity ent2 = {
+    .position = { 20.0f, 0.0f, 0.0f },
+    .rotation = { 0.0f, 0.0f, 0.0f },
+    .scale = { 1.0f, 1.0f, 1.0f },
+};
+
 int main(void)
 {
     return start_sdl_and_main_loop(main_loop, dispose);
@@ -43,13 +49,11 @@ bool main_loop(float delta)
             return true;
         }
 
-        ent1.mesh = mario;
-        init_entity(&ent1);
+        ent1.mesh = &mario;
+        ent2.mesh = &mario;
 
-        vec3_set_values(&ent1.scale, 0.2f, 0.2f, 0.2f);
-        ent1.position.z = -5.f;
+        bind_mesh_to_opengl(&mario);
 
-        // vec3_set_values(&camera.scale, 0.1f, 0.1f, 0.1f);
         camera.position.z = 1.f;
     }
 
@@ -135,13 +139,12 @@ bool main_loop(float delta)
 
     // vec3_add_values(&ent1.scale, -0.01f, -0.01f, -0.01f);
 
-    // ent1.position.z -= 0.1f;
-    // ent1.position.x += 0.002f;
     // ent1.rotation.z += 2.0f;
-    // ent1.rotation.z += 1.f;
     entity_update_transform(&ent1);
+    entity_update_transform(&ent2);
 
     draw_entity(&ent1);
+    draw_entity(&ent2);
 
     glUseProgram(0);
 
@@ -153,13 +156,14 @@ bool main_loop(float delta)
 void camera_update_transform(Camera* camera) {
     mat4_set_identity(&camera->world_transform);
 
+    mat4_rotate_around_axis(&camera->world_transform, X_AXIS, camera->rotation.x);
+    mat4_rotate_around_axis(&camera->world_transform, Y_AXIS, camera->rotation.y);
+    mat4_rotate_around_axis(&camera->world_transform, Z_AXIS, camera->rotation.z);
+
     vec3_scl(&camera->position, -1.f, -1.f, -1.f);
     mat4_translate_by_vec3(&camera->world_transform, camera->position);
     vec3_scl(&camera->position, -1.f, -1.f, -1.f);
 
-    mat4_rotate_around_axis(&camera->world_transform, X_AXIS, camera->rotation.x);
-    mat4_rotate_around_axis(&camera->world_transform, Y_AXIS, camera->rotation.y);
-    mat4_rotate_around_axis(&camera->world_transform, Z_AXIS, camera->rotation.z);
     mat4_scale_by_vec3(&camera->world_transform, camera->scale);
 }
 
@@ -215,16 +219,11 @@ void bind_mesh_to_opengl(Mesh* mesh)
     glBindVertexArray(0);
 }
 
-void init_entity(Entity* ent)
-{
-    bind_mesh_to_opengl(&ent->mesh);
-}
-
 void draw_entity(Entity* ent) {
     GLuint id = glGetUniformLocation(gl_shader_program, "local_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
 
-    draw_mesh(&ent->mesh);
+    draw_mesh(ent->mesh);
 }
 
 void check_gl_errors(char* context) {

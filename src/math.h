@@ -17,11 +17,9 @@ typedef struct Vec3
 
 typedef float Mat4[16];
 
-enum RotationAxis {
-    X_AXIS,
-    Y_AXIS,
-    Z_AXIS
-};
+extern Vec3 X_AXIS;
+extern Vec3 Y_AXIS;
+extern Vec3 Z_AXIS;
 
 float to_radians(float degrees);
 float cos_deg(float degrees);
@@ -46,7 +44,7 @@ void mat4_scale_by_vec3(Mat4* mtx, Vec3 vec);
 void mat4_rotate_around_vec3(Mat4* mtx, struct Vec3* vec);
 void mat4_set_identity(Mat4* mtx);
 void mat4_copy_to(const Mat4* src, Mat4* dst);
-void mat4_rotate_around_axis(Mat4* mtx, enum RotationAxis axis, float angle_degrees);
+void mat4_rotate_around_axis(Mat4* mtx, Vec3 axis, float angle_degrees);
 void mat4_mul(Mat4* mA, const Mat4* mB);
 void mat4_set_to_rotation_matrix(Mat4* mtx, Vec3 axis, float angle_degrees);
 void mat4_translate_by_vec3(Mat4* mtx, Vec3 vec);
