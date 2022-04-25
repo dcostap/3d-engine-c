@@ -21,7 +21,6 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetSwapInterval(1); // Use Vsync
 
     sdl_window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         screen_width, screen_height, SDL_WINDOW_OPENGL);
@@ -47,6 +46,12 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
         return 1;
     }
 
+    // Use Vsync
+    if (SDL_GL_SetSwapInterval(1) == -1) {
+        printf("Error setting Vsync: %s\n", SDL_GetError());
+        return 1;
+    }
+
     bool quit = false;
     Uint64 last_time = 0;
     int last_current_FPS;
@@ -60,10 +65,10 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
         //     SDL_Delay(1);
         // }
 
-        if (elapsed < 1000.0f / target_FPS)
-        {
-            elapsed = 1000.0f / target_FPS;
-        }
+        // if (elapsed < 1000.0f / target_FPS)
+        // {
+        //     elapsed = 1000.0f / target_FPS;
+        // }
 
         current_FPS = (int)(1 / (elapsed / 1000.0f));
 
