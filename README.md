@@ -10,21 +10,18 @@ Create the output `build` folder:
 ## Compiling for Linux
 
     sudo apt-get install libsdl2-dev
+    sudo apt-get install libglew-dev
 
 https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md
 
-Change `CC` and `LIBS` flag in `Makefile`.
-
-Run `make` and open the output in `./build`.
+Run `make build/linux` and open the output in `./build`.
 
 Alternatively: `./linux_run.sh`
 
-## Compiling for Windows (.exe) via WSL2
+## Compiling for Windows (generating .exe), via WSL2
 
 `apt install mingw-w64`
 
-Change `CC` and `LIBS` flag in `Makefile`.
-
-Run `make` and open the output in `./build`.
+Run `make build/windows.exe` and open the output in `./build`.
 
 Alternatively: `./windows_run.sh`

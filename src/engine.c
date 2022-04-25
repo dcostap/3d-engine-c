@@ -30,12 +30,20 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     SDL_AddEventWatch(on_window_resize_event, sdl_window);
 
     context = SDL_GL_CreateContext(sdl_window);
-
     if (context == NULL)
     {
+        printf("");
         fprintf(stderr, "Failed to create GL context\n");
         SDL_DestroyWindow(sdl_window);
         SDL_Quit();
+        return 1;
+    }
+
+    glewExperimental = GL_TRUE;
+    GLenum glewError = glewInit();
+    if (glewError != GLEW_OK)
+    {
+        printf("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
         return 1;
     }
 

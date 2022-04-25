@@ -1,4 +1,4 @@
-#version 400 core
+#version 140
 in vec3 vert_position;
 out vec4 out_color;
 

@@ -1,4 +1,4 @@
-#version 400 core
+#version 140
 
 in vec3 in_position;
 out vec3 vert_position;
