@@ -1,3 +1,4 @@
+from fileinput import filename
 import os
 import math
 import textwrap
@@ -26,13 +27,14 @@ def process_obj_file(file):
                 indices.append(int(parts[3]) - 1)
 
     filename_no_extension = file.split("/")[-1].split(".")[0]
+    filename_no_extension = "geo_" + filename_no_extension
 
     vertices_c = ""
 
     for vertex in vertices:
         vertices_c += \
 f"""\
-        {{ {str(vertex["x"])}f, {str(vertex["y"])}f, {str(vertex["z"])}f }},
+        {{ {'{0:.5}'.format(vertex["x"])}f, {'{0:.5}'.format(vertex["y"])}f, {'{0:.5}'.format(vertex["z"])}f }},
 """
 
     indices_c = ""
@@ -51,15 +53,15 @@ extern Mesh {filename_no_extension};
 f"""\
 #include "{filename_no_extension}.h"
 
-static float vertices[{str(len(vertices))}][3] = {{
+float vertices[{str(len(vertices))}][3] = {{
 {vertices_c}
 }};
 
-static int indices[{str(len(indices))}] = {{
+int indices[{str(len(indices))}] = {{
 {indices_c}
 }};
 
-static Mesh {filename_no_extension} = {{
+Mesh {filename_no_extension} = {{
     .vertices = (float**) vertices,
     .vertices_size = {str(len(vertices))},
     .indices = indices,

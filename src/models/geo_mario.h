@@ -1,4 +1,4 @@
 #include "../main.h"
 
-extern Mesh mario;
+extern Mesh geo_mario;
         

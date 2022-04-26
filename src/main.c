@@ -1,5 +1,5 @@
 #include "main.h"
-#include "models/mario.h"
+#include "models/geo_mario.h"
 #include "input.h"
 
 GLuint gl_shader_program;
@@ -45,10 +45,10 @@ bool main_loop(float delta)
             return true;
         }
 
-        ent1.mesh = &mario;
-        ent2.mesh = &mario;
+        ent1.mesh = &geo_mario;
+        ent2.mesh = &geo_mario;
 
-        bind_mesh_to_opengl(&mario);
+        bind_mesh_to_opengl(&geo_mario);
 
         camera.position.z = 15.f;
     }
@@ -91,17 +91,17 @@ bool main_loop(float delta)
     if (is_key_pressed(SDLK_e))
         camera.position.y -= cam_speed;
 
-    if (is_key_pressed(SDLK_k))
+    if (is_key_pressed(SDLK_KP_5))
         camera.rotation.x += cam_rot_speed;
-    if (is_key_pressed(SDLK_i))
+    if (is_key_pressed(SDLK_KP_8))
         camera.rotation.x -= cam_rot_speed;
-    if (is_key_pressed(SDLK_j))
+    if (is_key_pressed(SDLK_KP_4))
         camera.rotation.y -= cam_rot_speed;
-    if (is_key_pressed(SDLK_l))
+    if (is_key_pressed(SDLK_KP_6))
         camera.rotation.y += cam_rot_speed;
-    if (is_key_pressed(SDLK_u))
+    if (is_key_pressed(SDLK_KP_7))
         camera.rotation.z += cam_rot_speed;
-    if (is_key_pressed(SDLK_o))
+    if (is_key_pressed(SDLK_KP_9))
         camera.rotation.z -= cam_rot_speed;
 
     draw();
@@ -201,7 +201,7 @@ void bind_mesh_to_opengl(Mesh* mesh)
 
     // Bind vertex position attribute
     GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
-    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), NULL);
     glEnableVertexAttribArray(pos_attr_loc);
 
     // Bind vertex texture coordinate attribute
@@ -238,6 +238,17 @@ void draw_mesh(Mesh* mesh)
     glDrawElements(GL_TRIANGLES, mesh->indices_size, GL_UNSIGNED_INT, NULL);
 
     glBindVertexArray(0);
+
+//     glBegin(GL_POLYGON);
+//     for (int index = 0; index < geo_mario.indices_size; index++)  {
+//             int i = geo_mario.indices[index];
+//             // printf("%d", i);
+//             float *vert = geo_mario.vertices[i];
+//             // printf("%f\n", vert);
+//             glVertex3f(vert[0], vert[1], vert[2]);
+//     }
+//     glEnd();
+
 }
 
 int init_shaders(char* vert_shader_filename, char* frag_shader_filename)

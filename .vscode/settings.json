@@ -33,7 +33,8 @@
         "sdl_opengles.h": "c",
         "glext.h": "c",
         "main.h": "c",
-        "glew.h": "c"
+        "glew.h": "c",
+        "geo_mario.h": "c"
     },
     "makefile.launchConfigurations": [
         {
