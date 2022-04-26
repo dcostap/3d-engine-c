@@ -38,6 +38,3 @@ void draw_entity(Entity *ent);
 void check_gl_errors(char *context);
 void draw_mesh(Mesh *mesh);
 int init_shaders(char *vert_shader_filename, char *frag_shader_filename);
-
-// This won't work if the array is stored in the heap
-#define ARRAY_LENGTH_STACK(x) (int)(sizeof(x) / sizeof((x)[0]))

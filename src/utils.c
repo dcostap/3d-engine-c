@@ -1,10 +1,10 @@
 #include "utils.h"
 
-char *read_file(const char *filename, size_t *filesize)
+char* read_file(const char* filename, size_t* filesize)
 {
-    char *buffer;
+    char* buffer;
     size_t length;
-    FILE *f = fopen(filename, "rb");
+    FILE* f = fopen(filename, "rb");
     size_t read_length;
 
     if (f)
@@ -20,7 +20,7 @@ char *read_file(const char *filename, size_t *filesize)
             exit(0);
         }
 
-        buffer = (char *)malloc(length + 1);
+        buffer = (char*)malloc(length + 1);
 
         if (length)
         {

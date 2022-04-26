@@ -1,22 +1,10 @@
 #include "main.h"
 #include "models/mario.h"
+#include "input.h"
 
 GLuint gl_shader_program;
 
 Camera camera;
-
-SDL_KeyCode keys_pressed[100];
-int keys_pressed_size = 0;
-
-bool is_key_pressed(SDL_KeyCode key)
-{
-    for (int i = 0; i < keys_pressed_size; i++)
-    {
-        if (keys_pressed[i] == key)
-            return true;
-    }
-    return false;
-}
 
 Entity ent1 = {
     .position = {0.0f, 0.0f, 0.0f},
@@ -56,38 +44,11 @@ bool main_loop(float delta)
         camera.position.z = 15.f;
     }
 
-    SDL_Event e;
-    while (SDL_PollEvent(&e))
-    {
-        if (e.type == SDL_QUIT)
-        {
-            return true;
-        }
-        else if (e.type == SDL_KEYDOWN && e.key.repeat == 0)
-        {
-            keys_pressed[keys_pressed_size] = e.key.keysym.sym;
-            keys_pressed_size++;
-        }
-        else if (e.type == SDL_KEYUP && e.key.repeat == 0)
-        {
-            SDL_KeyCode key = e.key.keysym.sym;
-            for (int i = 0; i < keys_pressed_size; i++)
-            {
-                if (keys_pressed[i] == key)
-                {
-                    // displace the rest of the array 1 spot to the left
-                    if (i < keys_pressed_size - 1)
-                    {
-                        for (int j = i; j < keys_pressed_size - 1; j++)
-                        {
-                            keys_pressed[j] = keys_pressed[j + 1];
-                        }
-                    }
-                    keys_pressed_size--;
-                    break;
-                }
-            }
-        }
+    update_input();
+
+    if (is_there_event(SDL_QUIT)) {
+        exit_app();
+        return;
     }
 
     float cam_speed = 0.15f;
@@ -168,7 +129,7 @@ bool main_loop(float delta)
     return false;
 }
 
-void camera_update_transform(Camera *camera)
+void camera_update_transform(Camera* camera)
 {
     Mat4 rot;
     mat4_set_identity(&rot);
@@ -184,11 +145,11 @@ void camera_update_transform(Camera *camera)
     vec3_scl(&camera->position, -1.f, -1.f, -1.f);
 
     mat4_set_identity(&camera->world_transform);
-    mat4_mul(&camera->world_transform, rot);
-    mat4_mul(&camera->world_transform, trans);
+    mat4_mul(&camera->world_transform, &rot);
+    mat4_mul(&camera->world_transform, &trans);
 }
 
-void entity_update_transform(Entity *ent)
+void entity_update_transform(Entity* ent)
 {
     Mat4 rot;
     mat4_set_identity(&rot);
@@ -206,12 +167,12 @@ void entity_update_transform(Entity *ent)
     mat4_mul(&ent->world_transform, &scl);
 
     mat4_set_identity(&ent->world_transform);
-    mat4_mul(&ent->world_transform, trans);
-    mat4_mul(&ent->world_transform, rot);
-    mat4_mul(&ent->world_transform, scl);
+    mat4_mul(&ent->world_transform, &trans);
+    mat4_mul(&ent->world_transform, &rot);
+    mat4_mul(&ent->world_transform, &scl);
 }
 
-void mesh_apply_transform(Mesh *mesh, Mat4 *transform)
+void mesh_apply_transform(Mesh* mesh, Mat4* transform)
 {
     for (int i = 0; i < ARRAY_LENGTH_STACK(mesh->vertices); i++)
     {
@@ -229,7 +190,7 @@ void mesh_apply_transform(Mesh *mesh, Mat4 *transform)
     }
 }
 
-void bind_mesh_to_opengl(Mesh *mesh)
+void bind_mesh_to_opengl(Mesh* mesh)
 {
     glGenVertexArrays(1, &mesh->vao);
     glBindVertexArray(mesh->vao);
@@ -246,7 +207,7 @@ void bind_mesh_to_opengl(Mesh *mesh)
 
     // Bind vertex position attribute
     GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
-    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
+    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(pos_attr_loc);
 
     // Bind vertex texture coordinate attribute
@@ -257,7 +218,7 @@ void bind_mesh_to_opengl(Mesh *mesh)
     glBindVertexArray(0);
 }
 
-void draw_entity(Entity *ent)
+void draw_entity(Entity* ent)
 {
     GLuint id = glGetUniformLocation(gl_shader_program, "local_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
@@ -265,7 +226,7 @@ void draw_entity(Entity *ent)
     draw_mesh(ent->mesh);
 }
 
-void check_gl_errors(char *context)
+void check_gl_errors(char* context)
 {
     GLenum error = glGetError();
     if (GL_NO_ERROR != error)
@@ -275,7 +236,7 @@ void check_gl_errors(char *context)
     }
 }
 
-void draw_mesh(Mesh *mesh)
+void draw_mesh(Mesh* mesh)
 {
     glBindVertexArray(mesh->vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
@@ -285,11 +246,11 @@ void draw_mesh(Mesh *mesh)
     glBindVertexArray(0);
 }
 
-int init_shaders(char *vert_shader_filename, char *frag_shader_filename)
+int init_shaders(char* vert_shader_filename, char* frag_shader_filename)
 {
     size_t size;
-    const char *vert_shader = read_file(vert_shader_filename, &size);
-    const char *frag_shader = read_file(frag_shader_filename, &size);
+    const char* vert_shader = read_file(vert_shader_filename, &size);
+    const char* frag_shader = read_file(frag_shader_filename, &size);
 
     GLuint new_program;
 
