@@ -3,8 +3,17 @@
 #include "input.h"
 
 GLuint gl_shader_program;
-
 Camera camera;
+
+void camera_update_transform(Camera *camera);
+void entity_update_transform(Entity *ent);
+void bind_mesh_to_opengl(Mesh *mesh);
+void init_entity(Entity *ent);
+void draw_entity(Entity *ent);
+void check_gl_errors(char *context);
+void draw_mesh(Mesh *mesh);
+int init_shaders(char *vert_shader_filename, char *frag_shader_filename);
+void draw();
 
 Entity ent1 = {
     .position = {0.0f, 0.0f, 0.0f},
@@ -95,6 +104,13 @@ bool main_loop(float delta)
     if (is_key_pressed(SDLK_o))
         camera.rotation.z -= cam_rot_speed;
 
+    draw();
+
+    return false;
+}
+
+void draw()
+{
     glViewport(0, 0, screen_width, screen_height);
 
     glEnable(GL_DEPTH_TEST);
@@ -113,8 +129,6 @@ bool main_loop(float delta)
     id = glGetUniformLocation(gl_shader_program, "view_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform);
 
-    // vec3_add_values(&ent1.scale, -0.01f, -0.01f, -0.01f);
-
     ent2.rotation.y += 2.0f;
     entity_update_transform(&ent1);
     entity_update_transform(&ent2);
@@ -125,8 +139,6 @@ bool main_loop(float delta)
     glUseProgram(0);
 
     SDL_GL_SwapWindow(sdl_window);
-
-    return false;
 }
 
 void camera_update_transform(Camera* camera)
@@ -170,24 +182,6 @@ void entity_update_transform(Entity* ent)
     mat4_mul(&ent->world_transform, &trans);
     mat4_mul(&ent->world_transform, &rot);
     mat4_mul(&ent->world_transform, &scl);
-}
-
-void mesh_apply_transform(Mesh* mesh, Mat4* transform)
-{
-    for (int i = 0; i < ARRAY_LENGTH_STACK(mesh->vertices); i++)
-    {
-        for (int j = 0; j < ARRAY_LENGTH_STACK(mesh->vertices[i]); j++)
-        {
-            Vec3 tmp;
-            tmp.x = mesh->vertices[i][0];
-            tmp.y = mesh->vertices[i][1];
-            tmp.z = mesh->vertices[i][2];
-            vec3_transform_by_mat4(&tmp, transform);
-            mesh->vertices[i][0] = tmp.x;
-            mesh->vertices[i][1] = tmp.y;
-            mesh->vertices[i][2] = tmp.z;
-        }
-    }
 }
 
 void bind_mesh_to_opengl(Mesh* mesh)

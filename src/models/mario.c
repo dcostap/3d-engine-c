@@ -489,7 +489,7 @@ static int indices[2256] = {
 };
 
 Mesh mario = {
-    .vertices = vertices,
+    .vertices = (float**) vertices,
     .vertices_size = 480,
     .indices = indices,
     .indices_size = 2256,

@@ -60,7 +60,7 @@ static int indices[{str(len(indices))}] = {{
 }};
 
 static Mesh {filename_no_extension} = {{
-    .vertices = vertices,
+    .vertices = (float**) vertices,
     .vertices_size = {str(len(vertices))},
     .indices = indices,
     .indices_size = {str(len(indices))},

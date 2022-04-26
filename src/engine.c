@@ -31,10 +31,8 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     context = SDL_GL_CreateContext(sdl_window);
     if (context == NULL)
     {
-        printf("");
         fprintf(stderr, "Failed to create GL context\n");
-        SDL_DestroyWindow(sdl_window);
-        SDL_Quit();
+        dispose();
         return 1;
     }
 
@@ -43,6 +41,7 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     if (glewError != GLEW_OK)
     {
         printf("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
+        dispose();
         return 1;
     }
 
@@ -50,6 +49,7 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(v
     if (SDL_GL_SetSwapInterval(1) == -1)
     {
         printf("Error setting Vsync: %s\n", SDL_GetError());
+        dispose();
         return 1;
     }
 

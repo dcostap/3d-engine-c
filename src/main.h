@@ -27,14 +27,5 @@ typedef struct Camera
     Mat4 world_transform;
 } Camera;
 
-void camera_update_transform(Camera *camera);
-void entity_update_transform(Entity *ent);
-void mesh_apply_transform(Mesh *mesh, Mat4 *transform);
 int main(void);
 bool main_loop(float delta);
-void bind_mesh_to_opengl(Mesh *mesh);
-void init_entity(Entity *ent);
-void draw_entity(Entity *ent);
-void check_gl_errors(char *context);
-void draw_mesh(Mesh *mesh);
-int init_shaders(char *vert_shader_filename, char *frag_shader_filename);
