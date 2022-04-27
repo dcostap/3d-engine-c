@@ -1,3 +1,4 @@
+import pathlib
 from fileinput import filename
 import os
 import math
@@ -6,6 +7,7 @@ import textwrap
 from numpy import append
 
 import time
+
 
 def process_obj_file(file):
     vertices = []
@@ -16,8 +18,8 @@ def process_obj_file(file):
     final_vertices = []
     final_normals = []
 
+    ## STEP 1: simply store all the info found in the .obj file
     with open(file, "r") as opened_file:
-        print("Opened file " + file)
         for line in opened_file.readlines():
             parts = line.split(" ")
             if parts[0] == "v":
@@ -46,6 +48,8 @@ def process_obj_file(file):
                         }
                     )
 
+    ## STEP 2: process the info; .obj format indexes normals, etc separately, but OpenGl only supports one index array.
+    ## Thus, we find all the truly unique vertices (same attributes - normals, vertex pos., UVs...) and output our single index array.
     current_new_index = 0
     for index in indices:
         new_id = (index["vertex"], index["normal"])
@@ -60,8 +64,7 @@ def process_obj_file(file):
             final_normals.append(normals[index["normal"]])
             current_new_index += 1
 
-
-    # Store the info in a C file
+    ## STEP 3:  Store the processed info into new .c geo files
     filename_no_extension = file.split("/")[-1].split(".")[0]
     filename_no_extension = "geo_" + filename_no_extension
 
@@ -96,22 +99,22 @@ extern Mesh {filename_no_extension};
             f"""\
 #include "{filename_no_extension}.h"
 
-float vertices[{str(len(final_vertices))}][3] = {{
+static float vertices[{str(len(final_vertices))}][3] = {{
 {vertices_c}
 }};
 
-float normals[{str(len(final_normals))}][3] = {{
+static float normals[{str(len(final_normals))}][3] = {{
 {normals_c}
 }};
 
-int indices[{str(len(final_indices))}] = {{
+static int indices[{str(len(final_indices))}] = {{
 {indices_c}
 }};
 
 Mesh {filename_no_extension} = {{
-    .vertices = (float**) vertices,
+    .vertices = vertices,
     .vertices_size = {str(len(final_vertices))},
-    .normals = (float**) normals,
+    .normals = normals,
     .normals_size = {str(len(final_normals))},
     .indices = indices,
     .indices_size = {str(len(final_indices))},
@@ -119,11 +122,25 @@ Mesh {filename_no_extension} = {{
 """
         )
 
-root = "./assets/models"
-for file in os.listdir(root):
-    file = root + "/" + file
-    if os.path.isfile(file):
-        start_time = time.time()
-        process_obj_file(file)
-        print(file + " finished, took %.2f seconds." % (time.time() - start_time))
 
+def explore_folder_recursive(root):
+    for file in os.listdir(root):
+        file = root + "/" + file
+        if os.path.isfile(file):
+            if pathlib.Path(file).suffix == ".obj":
+                start_time = time.time()
+                process_obj_file(file)
+                print(file + " finished, took %.2f seconds." %
+                      (time.time() - start_time))
+        else:
+            explore_folder_recursive(file)
+
+# Delete existing generated .c geo files
+for root, dirs, files in os.walk("./src/models/"):
+    path = root.split(os.sep)
+    for file in files:
+        print("Removing " + root + file + "...")
+        os.remove(root + file)
+print("-----------------")
+
+explore_folder_recursive("assets/models")

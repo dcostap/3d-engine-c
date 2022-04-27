@@ -42,8 +42,6 @@ bool load_shaders()
     glAttachShader(new_program, vertex_id);
     glAttachShader(new_program, fragment_id);
 
-    glBindAttribLocation(new_program, 0, "position");
-    glBindAttribLocation(new_program, 0, "position");
     glBindFragDataLocation(new_program, 0, "out_color");
 
     glLinkProgram(new_program);

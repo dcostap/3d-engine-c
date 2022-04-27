@@ -1,5 +1,6 @@
 #include "main.h"
-#include "models/geo_mario.h"
+#include "models/geo_suzanne.h"
+#include "models/geo_teapot.h"
 #include "input.h"
 #include "shader.h"
 
@@ -40,10 +41,11 @@ bool main_loop(float delta)
             return true;
         }
 
-        ent1.mesh = &geo_mario;
-        ent2.mesh = &geo_mario;
+        ent1.mesh = &geo_suzanne;
+        ent2.mesh = &geo_teapot;
 
-        bind_mesh_to_opengl(&geo_mario);
+        bind_mesh_to_opengl(&geo_suzanne);
+        bind_mesh_to_opengl(&geo_teapot);
 
         camera.position.z = 15.f;
     }
