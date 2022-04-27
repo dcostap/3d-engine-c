@@ -5,7 +5,7 @@
 typedef struct Mesh
 {
     GLuint vao, vbo, ebo;
-    float **vertices;
+    float (*vertices)[3];
     int vertices_size;
     int *indices;
     int indices_size;
