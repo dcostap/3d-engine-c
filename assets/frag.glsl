@@ -1,7 +1,10 @@
 #version 140
-in vec3 vert_position;
+in vec3 frag_position;
+in vec3 frag_normal;
 out vec4 out_color;
 
 void main(void) {
-    out_color = vec4((vert_position.x + 1) / 2.0, (vert_position.x + 1) / 2.0, (vert_position.x + 1) / 2.0, 1.0);
+    float diff = dot(vec3(0.0, 0.0, -1.0), frag_normal);
+
+    out_color = vec4(diff, diff, diff, 1.0);
 }

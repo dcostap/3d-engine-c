@@ -1,18 +1,13 @@
 #include "main.h"
 #include "models/geo_mario.h"
 #include "input.h"
+#include "shader.h"
 
-GLuint gl_shader_program;
 Camera camera;
 
 void camera_update_transform(Camera *camera);
 void entity_update_transform(Entity *ent);
-void bind_mesh_to_opengl(Mesh *mesh);
-void init_entity(Entity *ent);
-void draw_entity(Entity *ent);
 void check_gl_errors(char *context);
-void draw_mesh(Mesh *mesh);
-int init_shaders(char *vert_shader_filename, char *frag_shader_filename);
 void draw();
 
 Entity ent1 = {
@@ -39,8 +34,8 @@ bool main_loop(float delta)
     if (is_first_loop)
     {
         is_first_loop = false;
-        gl_shader_program = init_shaders("assets/vert.glsl", "assets/frag.glsl");
-        if (gl_shader_program == 0)
+
+        if (!load_shaders())
         {
             return true;
         }
@@ -117,7 +112,7 @@ void draw()
     glClearColor(0.3f, 0.2f, 0.5f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(gl_shader_program);
+    start_shader();
 
     Mat4 projection;
     set_projection_matrix(&projection, 90.0f, 0.1f, 100.0f, screen_width, screen_height);
@@ -136,7 +131,7 @@ void draw()
     draw_entity(&ent1);
     draw_entity(&ent2);
 
-    glUseProgram(0);
+    stop_shader();
 
     SDL_GL_SwapWindow(sdl_window);
 }
@@ -184,42 +179,6 @@ void entity_update_transform(Entity* ent)
     mat4_mul(&ent->world_transform, &scl);
 }
 
-void bind_mesh_to_opengl(Mesh* mesh)
-{
-    glGenVertexArrays(1, &mesh->vao);
-    glBindVertexArray(mesh->vao);
-
-    // Populate vertex buffer
-    glGenBuffers(1, &mesh->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(mesh->vertices[0]) * mesh->vertices_size, mesh->vertices, GL_STATIC_DRAW);
-
-    // Populate element buffer
-    glGenBuffers(1, &mesh->ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh->indices[0]) * mesh->indices_size, mesh->indices, GL_STATIC_DRAW);
-
-    // Bind vertex position attribute
-    GLint pos_attr_loc = glGetAttribLocation(gl_shader_program, "in_position");
-    glVertexAttribPointer(pos_attr_loc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), NULL);
-    glEnableVertexAttribArray(pos_attr_loc);
-
-    // Bind vertex texture coordinate attribute
-    // GLint tex_attr_loc = glGetAttribLocation(gl_shader_program, "in_Texcoord");
-    // glVertexAttribPointer(tex_attr_loc, 2, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
-    // glEnableVertexAttribArray(tex_attr_loc);
-
-    glBindVertexArray(0);
-}
-
-void draw_entity(Entity* ent)
-{
-    GLuint id = glGetUniformLocation(gl_shader_program, "local_transform");
-    glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
-
-    draw_mesh(ent->mesh);
-}
-
 void check_gl_errors(char* context)
 {
     GLenum error = glGetError();
@@ -228,93 +187,6 @@ void check_gl_errors(char* context)
         printf("GL Error %x encountered in %s.\n", error, context);
         exit_app();
     }
-}
-
-void draw_mesh(Mesh* mesh)
-{
-    glBindVertexArray(mesh->vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
-
-    glDrawElements(GL_TRIANGLES, mesh->indices_size, GL_UNSIGNED_INT, NULL);
-
-    glBindVertexArray(0);
-
-//     glBegin(GL_POLYGON);
-//     for (int index = 0; index < geo_mario.indices_size; index++)  {
-//             int i = geo_mario.indices[index];
-//             // printf("%d", i);
-//             float *vert = geo_mario.vertices[i];
-//             // printf("%f\n", vert);
-//             glVertex3f(vert[0], vert[1], vert[2]);
-//     }
-//     glEnd();
-
-}
-
-int init_shaders(char* vert_shader_filename, char* frag_shader_filename)
-{
-    size_t size;
-    const char* vert_shader = read_file(vert_shader_filename, &size);
-    const char* frag_shader = read_file(frag_shader_filename, &size);
-
-    GLuint new_program;
-
-    GLint status;
-    char err_buf[512];
-
-    // vertex
-    GLuint vertex_id = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_id, 1, &vert_shader, NULL);
-    glCompileShader(vertex_id);
-    glGetShaderiv(vertex_id, GL_COMPILE_STATUS, &status);
-    if (status != GL_TRUE)
-    {
-        glGetShaderInfoLog(vertex_id, sizeof(err_buf), NULL, err_buf);
-        err_buf[sizeof(err_buf) - 1] = '\0';
-        fprintf(stderr, "Vertex shader compilation failed: %s\n", err_buf);
-        return 0;
-    }
-
-    // fragment
-    GLuint fragment_id = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_id, 1, &frag_shader, NULL);
-    glCompileShader(fragment_id);
-    glGetShaderiv(fragment_id, GL_COMPILE_STATUS, &status);
-    if (status != GL_TRUE)
-    {
-        glGetShaderInfoLog(fragment_id, sizeof(err_buf), NULL, err_buf);
-        err_buf[sizeof(err_buf) - 1] = '\0';
-        fprintf(stderr, "Fragment shader compilation failed: %s\n", err_buf);
-        return 0;
-    }
-
-    new_program = glCreateProgram();
-    glAttachShader(new_program, vertex_id);
-    glAttachShader(new_program, fragment_id);
-
-    glBindFragDataLocation(new_program, 0, "out_color");
-
-    glLinkProgram(new_program);
-    glUseProgram(new_program);
-
-    glGetProgramiv(new_program, GL_LINK_STATUS, &status);
-    if (status != GL_TRUE)
-    {
-        glGetProgramInfoLog(new_program, sizeof(err_buf), NULL, err_buf);
-        err_buf[sizeof(err_buf) - 1] = '\0';
-        fprintf(stderr, "Program (shader) linking failed: %s\n", err_buf);
-        return 0;
-    }
-
-    glDetachShader(new_program, fragment_id);
-    glDetachShader(new_program, vertex_id);
-
-    glDeleteShader(fragment_id);
-    glDeleteShader(vertex_id);
-
-    glUseProgram(0);
-
-    return new_program;
 }
 
 void dispose()

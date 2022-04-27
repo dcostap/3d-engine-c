@@ -34,7 +34,8 @@
         "glext.h": "c",
         "main.h": "c",
         "glew.h": "c",
-        "geo_mario.h": "c"
+        "geo_mario.h": "c",
+        "shader.h": "c"
     },
     "makefile.launchConfigurations": [
         {

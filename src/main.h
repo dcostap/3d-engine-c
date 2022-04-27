@@ -4,9 +4,11 @@
 
 typedef struct Mesh
 {
-    GLuint vao, vbo, ebo;
+    GLuint vao, ebo;
     float (*vertices)[3];
     int vertices_size;
+    float (*normals)[3];
+    int normals_size;
     int *indices;
     int indices_size;
 } Mesh;
