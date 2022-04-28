@@ -16,7 +16,7 @@ build/linux: LIBS = -lSDL2 -lm -lGLEW -lGLU -lGL
 build/windows.exe: CC = x86_64-w64-mingw32-gcc
 build/linux: CC = gcc
 
-$(TARGETS):$(wildcard src/*.c) $(wildcard src/models/*.c)
+$(TARGETS):$(wildcard src/*.c) $(wildcard src/models/*.c) $(wildcard src/png/*.c)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(INCLUDES)
 	cp libs/* build/
 	rm -rf build/assets/*

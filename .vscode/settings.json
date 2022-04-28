@@ -36,7 +36,8 @@
         "glew.h": "c",
         "geo_mario.h": "c",
         "shader.h": "c",
-        "geo_suzanne.h": "c"
+        "geo_suzanne.h": "c",
+        "graphics.h": "c"
     },
     "makefile.launchConfigurations": [
         {

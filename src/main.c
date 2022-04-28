@@ -2,7 +2,7 @@
 #include "models/geo_suzanne.h"
 #include "models/geo_teapot.h"
 #include "input.h"
-#include "shader.h"
+#include "graphics.h"
 
 Camera camera;
 

@@ -1,4 +1,4 @@
-#include "shader.h"
+#include "graphics.h"
 
 GLuint gl_shader_program = 0;
 
