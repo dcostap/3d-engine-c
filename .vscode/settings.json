@@ -37,7 +37,11 @@
         "geo_mario.h": "c",
         "shader.h": "c",
         "geo_suzanne.h": "c",
-        "graphics.h": "c"
+        "graphics.h": "c",
+        "lodepng.h": "c",
+        "geo_teapot.h": "c",
+        "geo_yoshi.h": "c",
+        "geo_stall.h": "c"
     },
     "makefile.launchConfigurations": [
         {

@@ -1,8 +1,7 @@
 #include "main.h"
-#include "models/geo_suzanne.h"
+#include "models/geo_stall.h"
 #include "models/geo_teapot.h"
 #include "input.h"
-#include "graphics.h"
 
 Camera camera;
 
@@ -41,10 +40,10 @@ bool main_loop(float delta)
             return true;
         }
 
-        ent1.mesh = &geo_suzanne;
+        ent1.mesh = &geo_stall;
         ent2.mesh = &geo_teapot;
 
-        bind_mesh_to_opengl(&geo_suzanne);
+        bind_mesh_to_opengl(&geo_stall);
         bind_mesh_to_opengl(&geo_teapot);
 
         camera.position.z = 15.f;

@@ -9,6 +9,7 @@
 #include <math.h>
 #include "math.h"
 #include "utils.h"
+#include "graphics.h"
 
 typedef struct Color
 {

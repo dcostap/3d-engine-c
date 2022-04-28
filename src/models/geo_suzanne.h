@@ -1,4 +1,4 @@
-#include "../main.h"
+#include "../graphics.h"
 
 extern Mesh geo_suzanne;
         

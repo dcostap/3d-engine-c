@@ -20,4 +20,4 @@ $(TARGETS):$(wildcard src/*.c) $(wildcard src/models/*.c) $(wildcard src/png/*.c
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(INCLUDES)
 	cp libs/* build/
 	rm -rf build/assets/*
-	rsync -av --progress assets/ build/assets --exclude models
+	rsync -av --progress assets/ build/assets

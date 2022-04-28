@@ -1,6 +1,22 @@
 #include "graphics.h"
+#include "png/lodepng.h"
 
 GLuint gl_shader_program = 0;
+#define uint unsigned int
+
+uint *load_png(const char *filename, uint *width, uint *height)
+{
+    uint *image;
+    uint error = lodepng_decode_file(&image, width, height, filename, LCT_RGBA, 8);
+
+    if (error != 0)
+    {
+        printf("error %s", lodepng_error_text(error));
+        exit_app();
+    }
+
+    return image;
+}
 
 bool load_shaders()
 {
@@ -88,13 +104,34 @@ void bind_mesh_to_opengl(Mesh *mesh)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(mesh->indices[0]) * mesh->indices_size, mesh->indices, GL_STATIC_DRAW);
 
     // Bind attributes
-    store_data_in_vbo(mesh->vertices, sizeof(mesh->vertices[0]) * mesh->vertices_size, mesh->vertices_size, "in_position");
-    store_data_in_vbo(mesh->normals, sizeof(mesh->normals[0]) * mesh->normals_size, mesh->normals_size, "in_normal");
+    store_data_in_vbo(mesh->vertices, sizeof(mesh->vertices[0]) * mesh->vertices_size, 3, "in_position");
+    store_data_in_vbo(mesh->normals, sizeof(mesh->normals[0]) * mesh->normals_size, 3, "in_normal");
+
+    if (mesh->uvs != NULL)
+    {
+        store_data_in_vbo(mesh->uvs, sizeof(mesh->uvs[0]) * mesh->uvs_size, 2, "in_uv");
+    }
 
     glBindVertexArray(0);
+
+    if (mesh->texture_file != NULL)
+    {
+        glGenTextures(1, &mesh->texture_id);
+        glBindTexture(GL_TEXTURE_2D, mesh->texture_id);
+
+        //GL_NEAREST = no smoothing
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        uint width, height;
+        uint *texture = load_png(mesh->texture_file, &width, &height);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
-void store_data_in_vbo(float *data, GLsizeiptr data_size, int number_of_elements, char *attribute_name)
+void store_data_in_vbo(float *data, GLsizeiptr data_size, int attribute_number, char *attribute_name)
 {
     GLuint vbo;
     glGenBuffers(1, &vbo);
@@ -102,7 +139,7 @@ void store_data_in_vbo(float *data, GLsizeiptr data_size, int number_of_elements
     glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_STATIC_DRAW);
 
     GLint attrib_id = glGetAttribLocation(gl_shader_program, attribute_name);
-    glVertexAttribPointer(attrib_id, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), NULL);
+    glVertexAttribPointer(attrib_id, attribute_number, GL_FLOAT, GL_FALSE, attribute_number * sizeof(GLfloat), NULL);
     glEnableVertexAttribArray(attrib_id);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -119,19 +156,13 @@ void draw_entity(Entity *ent)
 void draw_mesh(Mesh *mesh)
 {
     glBindVertexArray(mesh->vao);
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+    if (mesh->texture_file != NULL)
+    {
+        glBindTexture(GL_TEXTURE_2D, mesh->texture_id);
+    }
 
     glDrawElements(GL_TRIANGLES, mesh->indices_size, GL_UNSIGNED_INT, NULL);
 
     glBindVertexArray(0);
-
-    //     glBegin(GL_POLYGON);
-    //     for (int index = 0; index < geo_mario.indices_size; index++)  {
-    //             int i = geo_mario.indices[index];
-    //             // printf("%d", i);
-    //             float *vert = geo_mario.vertices[i];
-    //             // printf("%f\n", vert);
-    //             glVertex3f(vert[0], vert[1], vert[2]);
-    //     }
-    //     glEnd();
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

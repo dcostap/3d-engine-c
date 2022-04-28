@@ -1,4 +1,4 @@
 #include "../graphics.h"
 
-extern Mesh geo_teapot;
+extern Mesh geo_stall;
         
