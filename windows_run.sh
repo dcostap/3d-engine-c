@@ -1,1 +1,1 @@
-make build/windows.exe && ./build/windows.exe
+make windows && ./build/windows.exe

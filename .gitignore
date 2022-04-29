@@ -1,3 +1,4 @@
 build
+obj
 CMakeLists.txt.*
 gmon.out
