@@ -3,10 +3,14 @@
 
 GLuint gl_shader_program = 0;
 #define uint unsigned int
+#define uchar unsigned char
 
-uint *load_png(const char *filename, uint *width, uint *height)
+void store_data_in_vbo(void *data, GLsizeiptr data_size, int attribute_number, char *attribute_name);
+
+
+uchar *load_png(const char *filename, uint *width, uint *height)
 {
-    uint *image;
+    uchar *image;
     uint error = lodepng_decode_file(&image, width, height, filename, LCT_RGBA, 8);
 
     if (error != 0)
@@ -124,14 +128,14 @@ void bind_mesh_to_opengl(Mesh *mesh)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         uint width, height;
-        uint *texture = load_png(mesh->texture_file, &width, &height);
+        uchar *texture = load_png(mesh->texture_file, &width, &height);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture);
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 }
 
-void store_data_in_vbo(float *data, GLsizeiptr data_size, int attribute_number, char *attribute_name)
+void store_data_in_vbo(void *data, GLsizeiptr data_size, int attribute_number, char *attribute_name)
 {
     GLuint vbo;
     glGenBuffers(1, &vbo);

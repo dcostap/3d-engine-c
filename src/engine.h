@@ -30,5 +30,5 @@ extern int screen_height;
 
 int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(void));
 int on_window_resize_event(void *data, SDL_Event *event);
-static void dispose();
+void dispose();
 void exit_app();

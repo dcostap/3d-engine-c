@@ -1,9 +1,7 @@
 import pathlib
+import textwrap
 from fileinput import filename
 import os
-import math
-from tabnanny import filename_only
-import textwrap
 
 from numpy import append
 
@@ -50,8 +48,9 @@ def process_obj_file(file):
                 )
             elif parts[0] == "f":
                 if len(parts) > 4:
-                        print(f"⚠⚠⚠ {file} has something other than triangles. Indices len() = {len(parts)}")
-                        exit()
+                    print(
+                        f"⚠⚠⚠ {file} has something other than triangles. Indices len() = {len(parts)}")
+                    exit()
                 for i in range(1, 4):
                     vertex_indices = parts[i].split("/")
 
@@ -83,77 +82,84 @@ def process_obj_file(file):
 
     # STEP 3:  Store the processed info into new .c geo files
     original_filename_no_extension = file.split("/")[-1].split(".")[0]
-    filename_no_extension = "geo_" + original_filename_no_extension
+    new_filename_no_extension = "geo_" + original_filename_no_extension
 
     vertices_c = ""
-
     for vertex in final_vertices:
-        vertices_c += \
+        vertices_c += textwrap.dedent(
             f"""\
-        {{ {'{0:.5}'.format(vertex["x"])}f, {'{0:.5}'.format(vertex["y"])}f, {'{0:.5}'.format(vertex["z"])}f }},
-"""
+                {{ {'{0:.5}'.format(vertex["x"])}f, {'{0:.5}'.format(vertex["y"])}f, {'{0:.5}'.format(vertex["z"])}f }},
+            """)
 
     normals_c = ""
     for normal in final_normals:
-        normals_c += \
+        normals_c += textwrap.dedent(
             f"""\
-        {{ {'{0:.5}'.format(normal["x"])}f, {'{0:.5}'.format(normal["y"])}f, {'{0:.5}'.format(normal["z"])}f }},
-"""
+                {{ {'{0:.5}'.format(normal["x"])}f, {'{0:.5}'.format(normal["y"])}f, {'{0:.5}'.format(normal["z"])}f }},
+            """)
 
     uvs_c = ""
     if len(final_uvs) > 0:
         for uv in final_uvs:
             # UVs are mirrored vertically so they can be correctly displayed in OpenGL
-            uvs_c += \
+            uvs_c += textwrap.dedent(
                 f"""\
-            {{ {'{0:.5}'.format(uv["u"])}f, {'{0:.5}'.format(1 - uv["v"])}f }},
-    """
+                    {{ {'{0:.5}'.format(uv["u"])}f, {'{0:.5}'.format(1 - uv["v"])}f }},
+                """)
 
     indices_c = ""
     for index in final_indices:
         indices_c += f"{str(index)},"
 
-    with open("./src/models/" + filename_no_extension + ".h", "w") as c_file:
-        c_file.write(f"""\
-#include "../graphics.h"
-
-extern Mesh {filename_no_extension};
-        """)
-
-    with open("./src/models/" + filename_no_extension + ".c", "w") as c_file:
-        c_file.write(
+    with open("./src/models/" + new_filename_no_extension + ".h", "w") as c_file:
+        c_file.write(textwrap.dedent(
             f"""\
-#include "{filename_no_extension}.h"
+                #include "../graphics.h"
 
-static float vertices[{str(len(final_vertices))}][3] = {{
-{vertices_c}
-}};
+                extern Mesh {new_filename_no_extension};
+            """))
 
-static float normals[{str(len(final_normals))}][3] = {{
-{normals_c}
-}};
+    if len(final_uvs) > 0:
+        uvs_c_full = textwrap.dedent(
+            f"""\
+                static float uvs[{str(len(final_uvs))}][2] = {{
+                    {uvs_c}
+                }};
+            """)
+    else:
+        uvs_c_full = ""
 
-static float uvs[{str(len(final_uvs))}][2] = {{
-{uvs_c}
-}};
+    with open("./src/models/" + new_filename_no_extension + ".c", "w") as c_file:
+        c_file.write(textwrap.dedent(
+            f"""\
+                #include "{new_filename_no_extension}.h"
 
-static int indices[{str(len(final_indices))}] = {{
-{indices_c}
-}};
+                static float vertices[{str(len(final_vertices))}][3] = {{
+                {vertices_c}
+                }};
 
-Mesh {filename_no_extension} = {{
-    .vertices = vertices,
-    .vertices_size = {str(len(final_vertices))},
-    .normals = normals,
-    .normals_size = {str(len(final_normals))},
-    .indices = indices,
-    .indices_size = {str(len(final_indices))},
-    .uvs = { "uvs" if len(final_uvs) > 0 else "NULL" },
-    .uvs_size = {str(len(final_uvs))},
-    .texture_file = { ('"./assets/models/' + original_filename_no_extension + '.png"') if len(final_uvs) > 0 else "NULL" },
-}};
-"""
-        )
+                static float normals[{str(len(final_normals))}][3] = {{
+                {normals_c}
+                }};
+
+                {uvs_c_full}
+
+                static int indices[{str(len(final_indices))}] = {{
+                {indices_c}
+                }};
+
+                Mesh {new_filename_no_extension} = {{
+                    .vertices = vertices,
+                    .vertices_size = {str(len(final_vertices))},
+                    .normals = normals,
+                    .normals_size = {str(len(final_normals))},
+                    .indices = indices,
+                    .indices_size = {str(len(final_indices))},
+                    .uvs = { "uvs" if len(final_uvs) > 0 else "NULL" },
+                    .uvs_size = {str(len(final_uvs))},
+                    .texture_file = { ('"./assets/models/' + original_filename_no_extension + '.png"') if len(final_uvs) > 0 else "NULL" },
+                }};
+            """))
 
 
 def explore_folder_recursive(root):

@@ -53,7 +53,7 @@ bool main_loop(float delta)
 
     if (is_there_event(SDL_QUIT)) {
         exit_app();
-        return;
+        return 0;
     }
 
     float cam_speed = 0.15f;
@@ -188,8 +188,4 @@ void check_gl_errors(char* context)
         printf("GL Error %x encountered in %s.\n", error, context);
         exit_app();
     }
-}
-
-void dispose()
-{
 }

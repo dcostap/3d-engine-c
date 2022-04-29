@@ -79,6 +79,7 @@ ${FULL_OUTPUT}: $(OBJFILES)
 	strip $(FULL_OUTPUT)
 	@echo ""
 	@echo "✅ Created release binary 🚀"
+	@echo "./$(FULL_OUTPUT) "
 
 -include $(DEPFILES)
 

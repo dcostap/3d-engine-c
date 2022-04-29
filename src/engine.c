@@ -120,7 +120,7 @@ void exit_app()
     exit(0);
 }
 
-static void dispose()
+void dispose()
 {
     on_dispose_handler();
     SDL_GL_DeleteContext(context);
