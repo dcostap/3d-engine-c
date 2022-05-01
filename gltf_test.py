@@ -32,12 +32,13 @@ def read_gltf_accessor_data(gltf, accessor) -> list:
 #       vertex data: indices + position, normals, relationship with armature bones (weight, joints)...
 # skin / armature
 #     list of bone nodes
+#     inverse bind matrix for each node
 # animations
-#   channel: what node it affects (i'll ignore any target other than bone nodes aka joints), and what property the anim is modifying
+#   channel: what node it affects (i'll ignore any target other than bone nodes aka joints), what property the anim is modifying and the sampler used
 #   sampler: animation data in keyframes; times (input) and transformation (output)
 # GLTF doesn't seem to link animations with any mesh / armature / whatever
 
-# for rigging / skinning vertices I need...
+# for transforming the vertices for animation (aka skinning) I need...
 #   a) base / pose position of the bones
 #   b) current position in animation
 #   the a-b diff is what you transform on each vertex

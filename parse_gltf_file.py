@@ -1,7 +1,6 @@
-import pathlib
-import struct
 
-from pygltflib import GLTF2
+
+
 from process_assets import RawModelData
 
 def read_gltf_accessor_data(gltf, accessor) -> list:

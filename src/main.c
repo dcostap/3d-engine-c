@@ -1,6 +1,4 @@
 #include "main.h"
-#include "models/geo_stall.h"
-#include "models/geo_teapot.h"
 #include "input.h"
 
 Camera camera;
@@ -40,11 +38,11 @@ bool main_loop(float delta)
             return true;
         }
 
-        ent1.mesh = &geo_stall;
-        ent2.mesh = &geo_teapot;
+        // ent1.mesh = &geo_stall;
+        // ent2.mesh = &geo_untitled;
 
-        bind_mesh_to_opengl(&geo_stall);
-        bind_mesh_to_opengl(&geo_teapot);
+        // bind_mesh_to_opengl(&geo_stall);
+        // bind_mesh_to_opengl(&geo_untitled);
 
         camera.position.z = 15.f;
     }
@@ -126,11 +124,11 @@ void draw()
     glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform);
 
     ent2.rotation.y += 2.0f;
-    entity_update_transform(&ent1);
-    entity_update_transform(&ent2);
+    // entity_update_transform(&ent1);
+    // entity_update_transform(&ent2);
 
-    draw_entity(&ent1);
-    draw_entity(&ent2);
+    // draw_entity(&ent1);
+    // draw_entity(&ent2);
 
     stop_shader();
 
