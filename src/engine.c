@@ -6,16 +6,13 @@ int target_FPS = 60;
 
 int current_FPS = 0;
 
-static void (*on_dispose_handler)(void);
-
 SDL_Window *sdl_window;
 SDL_Surface *screen_surface;
 SDL_Renderer *renderer;
 SDL_GLContext context;
 
-int start_sdl_and_main_loop(bool (*main_loop)(float delta), void (*on_dispose)(void))
+int start_sdl_and_main_loop(bool (*main_loop)(float delta))
 {
-    on_dispose_handler = on_dispose;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -122,7 +119,6 @@ void exit_app()
 
 void dispose()
 {
-    on_dispose_handler();
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(sdl_window);
     sdl_window = NULL;

@@ -24,7 +24,7 @@ Entity ent2 = {
 
 int main()
 {
-    return start_sdl_and_main_loop(main_loop, dispose);
+    return start_sdl_and_main_loop(main_loop);
 }
 
 static bool is_first_loop = true;

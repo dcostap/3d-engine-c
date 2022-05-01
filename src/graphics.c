@@ -13,11 +13,16 @@ uchar *load_png(const char *filename, uint *width, uint *height)
     uchar *image;
     uint error = lodepng_decode_file(&image, width, height, filename, LCT_RGBA, 8);
 
-    if (error != 0)
+    if (image == NULL) {
+        printf("Loading image %s failed\n", filename);
+exit_app();
+    }
+    else if(error != 0)
     {
-        printf("error %s", lodepng_error_text(error));
+        printf("error %s\n", lodepng_error_text(error));
         exit_app();
     }
+
 
     return image;
 }
