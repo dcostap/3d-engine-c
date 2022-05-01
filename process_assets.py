@@ -4,7 +4,6 @@ import pathlib
 import textwrap
 import time
 
-
 @dataclass
 class RawModelData:
     indices: list = field(default_factory=list)
@@ -96,17 +95,10 @@ def export_data(file: str, data: RawModelData):
                 """))
 
 
-# Delete existing generated .c geo files
-for root, dirs, files in os.walk("./src/models/"):
-    path = root.split(os.sep)
-    for file in files:
-        print("Removing " + root + file + "...")
-        os.remove(root + file)
-print("-----------------")
-
-
 def explore_folder_recursive(root):
     from parse_obj_file import parse_obj_file
+    from parse_gltf_file import parse_gltf_file
+
     for file in os.listdir(root):
         file = root + "/" + file
         if os.path.isfile(file):
@@ -115,9 +107,22 @@ def explore_folder_recursive(root):
                 export_data(file, parse_obj_file(file))
                 print(file + " finished, took %.2f seconds." %
                       (time.time() - start_time))
+            elif pathlib.Path(file).suffix == ".gltf":
+                start_time = time.time()
+                export_data(file, parse_gltf_file(file))
+                print(file + " finished, took %.2f seconds." %
+                      (time.time() - start_time))
         else:
             explore_folder_recursive(file)
 
 
 if __name__ == "__main__":
+    # Delete existing generated .c geo files
+    for root, dirs, files in os.walk("./src/models/"):
+        path = root.split(os.sep)
+        for file in files:
+            print("Removing " + root + file + "...")
+            os.remove(root + file)
+    print("-----------------")
+
     explore_folder_recursive("assets/models")
