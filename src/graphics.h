@@ -12,7 +12,7 @@ typedef struct Mesh
     float (*uvs)[2];
     int uvs_size;
 
-    // root bone of related skeleton a.k.a. armature
+    // name of root bone of related skeleton a.k.a. armature
     // this is only informative
     char *skeleton;
 
@@ -25,7 +25,7 @@ typedef struct Mesh
 
     int *indices;
     int indices_size;
-    //TODO: join all common sizes, there's redundant data
+    //TODO: join all common size fields, there's redundant data
 
     char *texture_file;
     GLuint texture_id;

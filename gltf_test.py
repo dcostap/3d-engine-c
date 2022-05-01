@@ -30,13 +30,24 @@ def read_gltf_accessor_data(gltf, accessor) -> list:
 # mesh: thing with geometry data
 #   primitive: geometry data, we'll have one per mesh?
 #       vertex data: indices + position, normals, relationship with armature bones (weight, joints)...
+#           we'll refer to each relevant joint via indices
 # skin / armature
-#     list of bone nodes
+#     list of bone nodes (we need this list to know the index of each bone node)
 #     inverse bind matrix for each node
 # animations
 #   channel: what node it affects (i'll ignore any target other than bone nodes aka joints), what property the anim is modifying and the sampler used
 #   sampler: animation data in keyframes; times (input) and transformation (output)
 # GLTF doesn't seem to link animations with any mesh / armature / whatever
+#   mesh implicitly has armature data set in each vertex buffer (weights and joints)
+#   so a mesh implicitly can only be animated by animations that use that armature
+#   since this link isn't enforced, we'll store the names to document the actual supposes usages
+#       each armature has a name
+#           (for now it's the root node's name...
+#           TODO: grab the name from the node that represents the actual armature / whatever, in the gltf scene graph...),
+#       and we'll put that name in the meshes that use it
+#       each animation has a link to the root node, which has that name, or later on we'll add a name field to the animation struct
+#   About sharing animations on different meshes: in blender each one will have diff armature objects,
+#       but if we identify armatures by root node's name / whatever, we can name them the same to indicate that they share the skeleton and thus the animations
 
 # for transforming the vertices for animation (aka skinning) I need...
 #   a) base / pose position of the bones
