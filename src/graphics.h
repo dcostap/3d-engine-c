@@ -38,17 +38,17 @@ typedef struct AnimSkeletonBone {
 
     int keyframe_size;
     float *anim_keyframe_timings;
-    Vec3 *anim_keyframe_translation;
-    // Quaternion *anim_keyframe_rotation;
-    Vec3 *anim_keyframe_scale;
+    Vec3 *anim_keyframe_translations;
+    // Quaternion *anim_keyframe_rotations;
+    Vec3 *anim_keyframe_scales;
 
     struct AnimSkeletonBone **children;
 } AnimSkeletonBone;
 
 typedef struct SkeletonAnimation {
     char *name;
+    char *skeleton_name;
 
-    // includes all bones, even those not used in this animation (as NULL values), to allow indexing by an int
     AnimSkeletonBone *indexed_bones;
     int indexed_bones_size;
 

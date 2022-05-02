@@ -41,7 +41,8 @@
         "lodepng.h": "c",
         "geo_teapot.h": "c",
         "geo_yoshi.h": "c",
-        "geo_stall.h": "c"
+        "geo_stall.h": "c",
+        "gl.h": "c"
     },
     "makefile.launchConfigurations": [
         {

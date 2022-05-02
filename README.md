@@ -9,7 +9,7 @@ Create the output `build` folder:
 
 ## Compiling for Linux
 
-    sudo apt-get install libsdl2-dev
+    sudo apt-get install libsdl2-dev libsdl2-gfx-dev libsdl2-image-dev
     sudo apt-get install libglew-dev
 
 https://github.com/libsdl-org/SDL/blob/main/docs/README-linux.md

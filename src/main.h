@@ -9,5 +9,5 @@ typedef struct Camera
     Mat4 world_transform;
 } Camera;
 
-int main();
+int main(int argc, char *argv[]);
 bool main_loop(float delta);

@@ -20,7 +20,7 @@ Entity ent2 = {
     .scale = {1.0f, 1.0f, 1.0f},
 };
 
-int main()
+int main(int argc, char *argv[])
 {
     return start_sdl_and_main_loop(main_loop);
 }

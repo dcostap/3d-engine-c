@@ -38,10 +38,50 @@ class AnimBoneData:
 @dataclass
 class AnimData:
     name: str = ""
+    skeleton_name: str = None
     bones_indexed: list = field(default_factory=list)
 
 
-def export_data(file: str, data: RawModelData):
+def export_anim_data(file: str, data: AnimData):
+    new_filename_no_extension = data.name
+
+    with open("./src/anims/" + new_filename_no_extension + ".h", "w") as file:
+        file.write(textwrap.dedent(
+            f"""\
+                #include "../graphics.h"
+
+                extern SkeletonAnimation {new_filename_no_extension};
+            """))
+
+    bone_nodes = []
+    for (index, bone) in data.bones_indexed.items():
+        bone_nodes.append(f"""\
+            static AnimSkeletonBone {bone.name} = {{
+                .name = "{bone.name}",
+                .inverse_bind = {{
+                    {", ".join( ['{0:.5}f'.format(f) for f in bone.inverse_bind] )}
+                }},
+                .keyframe_size = {len(bone.anim_keyframe_timings)},
+                .anim_keyframe_timings = (float[]){{
+                    {", ".join( ['{0:.5}f'.format(time) for time in bone.anim_keyframe_timings] )}
+                }},
+                .anim_keyframe_translations = (float[]){{
+                    {", ".join(
+                        [f"{{ {'{0:.5}f'.format(trans[0])}, {'{0:.5}f'.format(trans[1])}, {'{0:.5}f'.format(trans[2])} }}" for trans in bone.anim_keyframe_translations]
+                    )}
+                }},
+            }};
+        """)
+
+    with open("./src/anims/" + new_filename_no_extension + ".c", "w") as file:
+        file.write(textwrap.dedent(
+            f"""\
+                #include "{new_filename_no_extension}.h"
+
+                {os.linesep.join(bone_nodes)}
+            """))
+
+def export_model_data(file: str, data: RawModelData):
     # Store the processed info into new .c geo files
     original_filename_no_extension = file.split("/")[-1].split(".")[0]
     new_filename_no_extension = "geo_" + original_filename_no_extension
@@ -307,7 +347,7 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
             bone_data = processed_bones[local_bone_index]
 
             for time in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].input]):
-                bone_data.anim_keyframe_timings.append(struct.unpack("<f", time))
+                bone_data.anim_keyframe_timings.append(struct.unpack("<f", time)[0])
 
             for transform in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].output]):
                 if animation_type == 'translation':
@@ -318,6 +358,7 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
                     bone_data.anim_keyframe_scales.append(struct.unpack("<fff", transform))
 
         anim_data.bones_indexed = processed_bones
+        anim_data.skeleton_name = gltf.skins[skin_index_for_this_animation].name
         anims.append(anim_data)
 
     return (mesh_data, anims)
@@ -330,8 +371,10 @@ def explore_folder_recursive(root):
             if pathlib.Path(file).suffix == ".gltf":
                 print(file)
                 start_time = time.time()
-                parse_gltf_file(file)
-                # export_data(file, parse_gltf_file(file))
+
+                data = parse_gltf_file(file)
+                export_model_data(file, data[0])
+                export_anim_data(file, data[1][0]) # ⚠️ We only export first anim for now
                 print(file + " finished, took %.2f seconds." %
                       (time.time() - start_time))
         else:
