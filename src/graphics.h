@@ -37,11 +37,12 @@ typedef struct AnimSkeletonBone {
     Mat4 inverse_bind;
 
     int keyframe_size;
-    float *anim_keyframe_timings;
+    float *anim_keyframe_translation_timings;
     Vec3 *anim_keyframe_translations;
     // Quaternion *anim_keyframe_rotations;
     Vec3 *anim_keyframe_scales;
 
+    //TODO: I need the root node to apply transforms starting from there
     struct AnimSkeletonBone **children;
 } AnimSkeletonBone;
 
@@ -49,11 +50,8 @@ typedef struct SkeletonAnimation {
     char *name;
     char *skeleton_name;
 
-    AnimSkeletonBone *indexed_bones;
+    AnimSkeletonBone **indexed_bones;
     int indexed_bones_size;
-
-    // root bone of related skeleton
-    AnimSkeletonBone *root;
 } SkeletonAnimation;
 
 typedef struct Entity

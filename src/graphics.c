@@ -7,22 +7,21 @@ GLuint gl_shader_program = 0;
 
 void store_data_in_vbo(void *data, GLsizeiptr data_size, int attribute_number, char *attribute_name);
 
-
 uchar *load_png(const char *filename, uint *width, uint *height)
 {
     uchar *image;
     uint error = lodepng_decode_file(&image, width, height, filename, LCT_RGBA, 8);
 
-    if (image == NULL) {
+    if (image == NULL)
+    {
         printf("Loading image %s failed\n", filename);
-exit_app();
+        exit_app();
     }
-    else if(error != 0)
+    else if (error != 0)
     {
         printf("error %s\n", lodepng_error_text(error));
         exit_app();
     }
-
 
     return image;
 }
@@ -121,6 +120,16 @@ void bind_mesh_to_opengl(Mesh *mesh)
         store_data_in_vbo(mesh->uvs, sizeof(mesh->uvs[0]) * mesh->uvs_size, 2, "in_uv");
     }
 
+    if (mesh->weights != NULL)
+    {
+        store_data_in_vbo(mesh->weights, sizeof(mesh->weights[0]) * mesh->weights_size, 4, "in_weights");
+    }
+
+    if (mesh->bones != NULL)
+    {
+        store_data_in_vbo(mesh->bones, sizeof(mesh->bones[0]) * mesh->bones_size, 4, "in_bones");
+    }
+
     glBindVertexArray(0);
 
     if (mesh->texture_file != NULL)
@@ -159,6 +168,15 @@ void draw_entity(Entity *ent)
     GLuint id = glGetUniformLocation(gl_shader_program, "local_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
 
+    GLuint id = glGetUniformLocation(gl_shader_program, "in_joint_matrix");
+
+    if (ent->mesh->bones != NULL && ent->mesh->weights != NULL)
+    {
+
+    }
+
+    glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform);
+
     draw_mesh(ent->mesh);
 }
 
@@ -174,4 +192,10 @@ void draw_mesh(Mesh *mesh)
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+Mat4 *calculate_animation_joint_matrix(Mesh *mesh, SkeletonAnimation *anim) {
+    // let's assume the root bone is the first
+    AnimSkeletonBone *root = anim->indexed_bones[0];
+    Mat4 transforms[anim->indexed_bones_size];
 }

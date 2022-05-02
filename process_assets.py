@@ -4,8 +4,6 @@ import pathlib
 import textwrap
 import time
 from typing import Tuple
-import numpy
-import transformations
 import pathlib
 import struct
 from pygltflib import GLTF2
@@ -27,7 +25,7 @@ class RawModelData:
 class AnimBoneData:
     name: str = ""
     inverse_bind: list = field(default_factory=list)
-    anim_keyframe_timings: list = field(default_factory=list)
+    anim_keyframe_translation_timings: list = field(default_factory=list)
     anim_keyframe_translations: list = field(default_factory=list)
     anim_keyframe_rotations: list = field(default_factory=list)
     anim_keyframe_scales: list = field(default_factory=list)
@@ -53,17 +51,17 @@ def export_anim_data(file: str, data: AnimData):
                 extern SkeletonAnimation {new_filename_no_extension};
             """))
 
-    bone_nodes = []
+    bone_nodes_code = []
     for (index, bone) in data.bones_indexed.items():
-        bone_nodes.append(f"""\
+        bone_nodes_code.append(f"""\
             static AnimSkeletonBone {bone.name} = {{
                 .name = "{bone.name}",
                 .inverse_bind = {{
                     {", ".join( ['{0:.5}f'.format(f) for f in bone.inverse_bind] )}
                 }},
-                .keyframe_size = {len(bone.anim_keyframe_timings)},
-                .anim_keyframe_timings = (float[]){{
-                    {", ".join( ['{0:.5}f'.format(time) for time in bone.anim_keyframe_timings] )}
+                .keyframe_size = {len(bone.anim_keyframe_translation_timings)},
+                .anim_keyframe_translation_timings = (float[]){{
+                    {", ".join( ['{0:.5}f'.format(time) for time in bone.anim_keyframe_translation_timings] )}
                 }},
                 .anim_keyframe_translations = (float[]){{
                     {", ".join(
@@ -73,12 +71,23 @@ def export_anim_data(file: str, data: AnimData):
             }};
         """)
 
+    animation_code = f"""\
+        SkeletonAnimation {data.name} = {{
+            .name = \"{data.name}\",
+            .skeleton_name = \"{data.skeleton_name}\",
+            .indexed_bones = {{ { ', '.join(["&" + bone.name for bone in data.bones_indexed.values()]) } }},
+            .indexed_bones_size = {len(data.bones_indexed)},
+        }};
+    """
+
     with open("./src/anims/" + new_filename_no_extension + ".c", "w") as file:
         file.write(textwrap.dedent(
             f"""\
                 #include "{new_filename_no_extension}.h"
 
-                {os.linesep.join(bone_nodes)}
+                {os.linesep.join(bone_nodes_code)}
+
+                {animation_code}
             """))
 
 def export_model_data(file: str, data: RawModelData):
@@ -346,15 +355,19 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
             local_bone_index = skins[skin_index_for_this_animation].bones_global_index_to_local_index[bone_index]
             bone_data = processed_bones[local_bone_index]
 
+            timings = []
             for time in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].input]):
-                bone_data.anim_keyframe_timings.append(struct.unpack("<f", time)[0])
+                timings.append(struct.unpack("<f", time)[0])
 
             for transform in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].output]):
                 if animation_type == 'translation':
+                    bone_data.anim_keyframe_translation_timings = timings
                     bone_data.anim_keyframe_translations.append(struct.unpack("<fff", transform))
                 elif animation_type == 'rotation':
+                    # TODO timings
                     bone_data.anim_keyframe_rotations.append(struct.unpack("<ffff", transform))
                 elif animation_type == 'scale':
+                    # TODO timings
                     bone_data.anim_keyframe_scales.append(struct.unpack("<fff", transform))
 
         anim_data.bones_indexed = processed_bones
