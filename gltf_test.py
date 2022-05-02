@@ -48,6 +48,15 @@ def read_gltf_accessor_data(gltf, accessor) -> list:
 #       each animation has a link to the root node, which has that name, or later on we'll add a name field to the animation struct
 #   About sharing animations on different meshes: in blender each one will have diff armature objects,
 #       but if we identify armatures by root node's name / whatever, we can name them the same to indicate that they share the skeleton and thus the animations
+# ELI5
+# each mesh is linked to -> specific armature
+#   link isn't enforced, we just store name of "armature" in the mesh
+# in theory, one armature can have multiple animations
+# in practice, I'll store one armature (list of bones) per animation
+# I'll store the anim data on each bone, to make things simpler
+# so in practice, i just need to link one mesh with its animation
+#
+# bone indexing can be a problem, since mesh vertex info refers to each bone by index, and this index is loaded in gltf as the scene node index
 
 # for transforming the vertices for animation (aka skinning) I need...
 #   a) base / pose position of the bones

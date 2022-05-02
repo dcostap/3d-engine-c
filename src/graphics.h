@@ -2,6 +2,7 @@
 
 #include "engine.h"
 
+
 typedef struct Mesh
 {
     GLuint vao, ebo;
@@ -37,19 +38,22 @@ typedef struct AnimSkeletonBone {
 
     int keyframe_size;
     float *anim_keyframe_timings;
-    Mat4 *anim_keyframe_transforms;
+    Vec3 *anim_keyframe_translation;
+    // Quaternion *anim_keyframe_rotation;
+    Vec3 *anim_keyframe_scale;
 
-    struct AnimSkeletonBone *parent;
+    struct AnimSkeletonBone **children;
 } AnimSkeletonBone;
 
 typedef struct SkeletonAnimation {
     char *name;
 
+    // includes all bones, even those not used in this animation (as NULL values), to allow indexing by an int
     AnimSkeletonBone *indexed_bones;
     int indexed_bones_size;
 
     // root bone of related skeleton
-    AnimSkeletonBone root;
+    AnimSkeletonBone *root;
 } SkeletonAnimation;
 
 typedef struct Entity

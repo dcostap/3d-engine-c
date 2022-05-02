@@ -3,11 +3,13 @@ import os
 import pathlib
 import textwrap
 import time
+from typing import Tuple
 import numpy
 import transformations
 import pathlib
 import struct
 from pygltflib import GLTF2
+from pygltflib import Node
 
 
 @dataclass
@@ -18,21 +20,25 @@ class RawModelData:
     uvs: list = field(default_factory=list)
     bones: list = field(default_factory=list)
     weights: list = field(default_factory=list)
+    skeleton_name: str = None
 
 
 @dataclass
-class AnimBone:
-    name: str
-    inverse_bind: numpy.array
+class AnimBoneData:
+    name: str = ""
+    inverse_bind: list = field(default_factory=list)
     anim_keyframe_timings: list = field(default_factory=list)
-    anim_keyframe_transforms: list = field(default_factory=list)
+    anim_keyframe_translations: list = field(default_factory=list)
+    anim_keyframe_rotations: list = field(default_factory=list)
+    anim_keyframe_scales: list = field(default_factory=list)
     children: list = field(default_factory=list)
+    parent_index: int = None
 
 
 @dataclass
 class AnimData:
-    root_bone: AnimBone
-    name: str
+    name: str = ""
+    bones_indexed: list = field(default_factory=list)
 
 
 def export_data(file: str, data: RawModelData):
@@ -176,21 +182,32 @@ def read_gltf_accessor_data(gltf, accessor) -> list:
     return all_data
 
 
-def parse_gltf_file(file: str) -> RawModelData:
+def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
     fname = pathlib.Path(file)
     gltf = GLTF2().load(fname)
 
-    all_mesh_nodes = {}
-    all_bone_nodes = {}
-    data = RawModelData()
-    for index, node in enumerate(gltf.nodes):
-        if node.mesh is not None:
-            all_mesh_nodes[index] = (gltf.meshes[node.mesh], node.skin)
-        else:
-            all_bone_nodes[index] = node
+    mesh_data = RawModelData()
 
-    # for now we'll just pick the first mesh
-    for (mesh, skin) in all_mesh_nodes.values():
+    @dataclass
+    class SkinWithBones:
+        skin_node: Node = None
+        bones_indexed: list = field(default_factory=list)
+        bones_global_index_to_local_index: dict = field(default_factory=dict)
+
+    # Index the skins (armatures) and store its bones, mapping its global node index to the local bone index that'll be used in the application
+    skins = {}
+    for index, skin in enumerate(gltf.skins):
+        skin_data = SkinWithBones()
+        skin_data.skin_node = skin
+        for (new_local_index, joint_index) in enumerate(skin.joints):
+            skin_data.bones_indexed.append(gltf.nodes[joint_index])
+            skin_data.bones_global_index_to_local_index[joint_index] = new_local_index
+        skins[index] = skin_data
+
+    # store the data of all mesh nodes
+    for node in [node for node in gltf.nodes if node.mesh is not None]:
+        mesh = gltf.meshes[node.mesh]
+
         if len(mesh.primitives) > 1:
             print("Multiple mesh primitives?!")
             exit()
@@ -198,10 +215,10 @@ def parse_gltf_file(file: str) -> RawModelData:
         for primitive in mesh.primitives:
             for index in read_gltf_accessor_data(gltf, gltf.accessors[primitive.indices]):
                 v = struct.unpack("<H", index)
-                data.indices.append(v[0])
+                mesh_data.indices.append(v[0])
             for pos in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.POSITION]):
                 v = struct.unpack("<fff", pos)
-                data.vertices.append(
+                mesh_data.vertices.append(
                     {
                         "x": v[0],
                         "y": v[1],
@@ -210,7 +227,7 @@ def parse_gltf_file(file: str) -> RawModelData:
                 )
             for normal in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.NORMAL]):
                 v = struct.unpack("<fff", normal)
-                data.normals.append(
+                mesh_data.normals.append(
                     {
                         "x": v[0],
                         "y": v[1],
@@ -220,23 +237,90 @@ def parse_gltf_file(file: str) -> RawModelData:
             if primitive.attributes.TEXCOORD_0 is not None:
                 for uvs in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.TEXCOORD_0]):
                     v = struct.unpack("<ff", uvs)
-                    data.uvs.append(
+                    mesh_data.uvs.append(
                         {
                             "u": v[0],
                             "v": v[1],
                         }
                     )
             # TODO: support more than 4 bones per vertex (JOINTS_N, WEIGHTS_N)
-            if skin is not None:
+            if node.skin is not None:
+                mesh_data.skeleton_name = gltf.skins[node.skin].name
                 for bones in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.JOINTS_0]):
                     v = struct.unpack("<BBBB", bones)
-                    data.bones.append(v)
+                    skin_data = skins[node.skin]
+                    mesh_data.bones.append([ skin_data.bones_global_index_to_local_index[index] for index in v ])
 
                 for weights in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.WEIGHTS_0]):
                     v = struct.unpack("<ffff", weights)
-                    data.weights.append(v)
+                    mesh_data.weights.append(v)
 
-    return data
+    anims = []
+
+    # Process animations, and for each one create a new skin with new bones that contain data relevant to the animation
+    for anim in gltf.animations:
+        if anim.name is None:
+            print("Animation with no name!")
+            exit()
+
+        anim_data = AnimData()
+        anim_data.name = anim.name
+        processed_bones = {}
+        skin_index_for_this_animation = None
+
+        def initalize_bones(skin):
+            inverse_binds = {}
+            for index, matrix in enumerate(read_gltf_accessor_data(gltf, gltf.accessors[skin.skin_node.inverseBindMatrices])):
+                local_index = skin.bones_global_index_to_local_index[index]
+                inverse_binds[local_index] = struct.unpack("<ffffffffffffffff", matrix)
+
+            for index, bone_node in enumerate(skin.bones_indexed):
+                bone_data = AnimBoneData()
+                processed_bones[index] = bone_data
+
+                bone_data.name = bone_node.name
+                bone_data.children = list(bone_node.children)
+                bone_data.inverse_bind = inverse_binds[index]
+
+            for index, bone in processed_bones.items():
+                for child_index in bone.children:
+                    child = processed_bones[skin.bones_global_index_to_local_index[child_index]]
+                    child.parent_index = index
+
+        for channel in anim.channels:
+            bone_index = channel.target.node
+            animation_type = channel.target.path
+
+            skin_index_for_this_bone = next((sk for sk in skins if bone_index in skins[sk].bones_global_index_to_local_index.keys()), None)
+
+            if skin_index_for_this_bone is None:
+                print(f"Bone in animation {anim.name} doesn't refer to any bone inside any Skin present in the file")
+                exit()
+            elif skin_index_for_this_animation is not None and skin_index_for_this_bone != skin_index_for_this_animation:
+                print(f"Animation {anim.name} refers to nodes that belong to more than 1 skin!")
+                exit()
+            elif skin_index_for_this_animation is None:
+                skin_index_for_this_animation = skin_index_for_this_bone
+                initalize_bones(skins[skin_index_for_this_animation])
+
+            local_bone_index = skins[skin_index_for_this_animation].bones_global_index_to_local_index[bone_index]
+            bone_data = processed_bones[local_bone_index]
+
+            for time in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].input]):
+                bone_data.anim_keyframe_timings.append(struct.unpack("<f", time))
+
+            for transform in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].output]):
+                if animation_type == 'translation':
+                    bone_data.anim_keyframe_translations.append(struct.unpack("<fff", transform))
+                elif animation_type == 'rotation':
+                    bone_data.anim_keyframe_rotations.append(struct.unpack("<ffff", transform))
+                elif animation_type == 'scale':
+                    bone_data.anim_keyframe_scales.append(struct.unpack("<fff", transform))
+
+        anim_data.bones_indexed = processed_bones
+        anims.append(anim_data)
+
+    return (mesh_data, anims)
 
 
 def explore_folder_recursive(root):
@@ -246,7 +330,8 @@ def explore_folder_recursive(root):
             if pathlib.Path(file).suffix == ".gltf":
                 print(file)
                 start_time = time.time()
-                export_data(file, parse_gltf_file(file))
+                parse_gltf_file(file)
+                # export_data(file, parse_gltf_file(file))
                 print(file + " finished, took %.2f seconds." %
                       (time.time() - start_time))
         else:
