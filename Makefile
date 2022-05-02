@@ -1,23 +1,54 @@
-# the build/windows.exe target builds a .exe, but it must still be compiled from linux. You can use WSL2
-
-# default target
-.DEFAULT_GOAL := build/linux
-
-# use make <target> to choose
-TARGETS= build/windows.exe build/linux
+OUTDIRS := build obj/models obj/png
+SRCFILES := $(wildcard src/*.c) $(wildcard src/models/*.c) $(wildcard src/png/*.c)
 
 INCLUDES = -Iinclude -Iinclude/SDL/include -Iinclude/SDL2_gfx -Iinclude/glew/include
+CFLAGS = -Wall -Wextra -pg -std=c99 -Wno-unused-parameter -Wno-unknown-pragmas -O0
 
-CFLAGS = -Wall -Wextra -pg -std=c99 -Wno-unused-parameter -Wno-unknown-pragmas
+.PHONY: default all test release clean dirs
 
-build/windows.exe: LIBS = -Llibs -lSDL2 -lopengl32 -lglew32
-build/linux: LIBS = -lSDL2 -lm -lGLEW -lGLU -lGL
+OBJFILES := $(patsubst src/%.c,obj/%.o,$(SRCFILES))
+DEPFILES := $(patsubst src/%.c,obj/%.d,$(SRCFILES))
 
-build/windows.exe: CC = x86_64-w64-mingw32-gcc
-build/linux: CC = gcc
+all: dirs clean linux
+default: linux
 
-$(TARGETS):$(wildcard src/*.c) $(wildcard src/models/*.c) $(wildcard src/png/*.c)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) $(INCLUDES)
+linux: EXE := app
+windows: EXE := app.exe
+
+FULL_OUTPUT = build/${EXE}
+
+linux: CC := gcc
+windows: CC := x86_64-w64-mingw32-gcc
+
+linux: LIBS := -lSDL2 -lm -lGLEW -lGLU -lGL
+windows: LIBS := -Llibs -lSDL2 -lglew32 -lopengl32
+
+dirs:
+	@mkdir -p  $(OUTDIRS)
+
+linux: $(FULL_OUTPUT)
+windows: $(FULL_OUTPUT)
+
+test:
+	@echo OBJFILES = $(OBJFILES)
+	@echo SRCFILES = $(SRCFILES)
+	@echo DEPFILES = $(DEPFILES)
+
+clean:
+	rm -f $(OBJFILES) $(DEPFILES) $(EXE)
+
+${FULL_OUTPUT}: $(OBJFILES)
 	cp libs/* build/
 	rm -rf build/assets/*
-	rsync -av assets/ build/assets
+	rsync -av -q assets/ build/assets
+
+	$(CC) $(CFLAGS) $(OBJFILES) $(LIBS) $(INCLUDES) -o $(FULL_OUTPUT)
+	strip $(FULL_OUTPUT)
+	@echo ""
+	@echo "✅ Created release binary 🚀"
+	@echo "./$(FULL_OUTPUT) "
+
+-include $(DEPFILES)
+
+obj/%.o: src/%.c
+	$(CC) $(RELFLAGS) $(LIBS) $(CFLAGS) $(INCLUDES) -MMD -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
