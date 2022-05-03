@@ -1,5 +1,6 @@
 #include "main.h"
 #include "input.h"
+#include "models/geo_rigged_figure.h"
 
 Camera camera;
 
@@ -9,7 +10,7 @@ void check_gl_errors(char *context);
 void draw();
 
 Entity ent1 = {
-    .position = {0.0f, 0.0f, 0.0f},
+    .position = {0.0f, 0.0f, -1.0f},
     .rotation = {0.0f, 0.0f, 0.0f},
     .scale = {1.0f, 1.0f, 1.0f},
 };
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
 
 static bool is_first_loop = true;
 
-bool main_loop(float delta)
+bool main_loop()
 {
     if (is_first_loop)
     {
@@ -38,10 +39,10 @@ bool main_loop(float delta)
             return true;
         }
 
-        // ent1.mesh = &geo_stall;
+        ent1.mesh = &geo_rigged_figure;
         // ent2.mesh = &geo_untitled;
 
-        // bind_mesh_to_opengl(&geo_stall);
+        bind_mesh_to_opengl(&geo_rigged_figure);
         // bind_mesh_to_opengl(&geo_untitled);
 
         camera.position.z = 15.f;
@@ -54,49 +55,49 @@ bool main_loop(float delta)
         return 0;
     }
 
-    float cam_speed = 0.15f;
-    float cam_rot_speed = 1.5f;
+    float cam_speed = 30.0f;
+    float cam_rot_speed = 50.0f;
 
     if (is_key_pressed(SDLK_ESCAPE))
         return true;
 
     if (is_key_pressed(SDLK_w))
     {
-        camera.position.z -= cos_deg(camera.rotation.y);
-        camera.position.x += sin_deg(camera.rotation.y);
+        camera.position.z -= cos_deg(camera.rotation.y) * cam_speed * delta;
+        camera.position.x += sin_deg(camera.rotation.y) * cam_speed * delta;
     }
     if (is_key_pressed(SDLK_s))
     {
-        camera.position.z += cos_deg(camera.rotation.y);
-        camera.position.x -= sin_deg(camera.rotation.y);
+        camera.position.z += cos_deg(camera.rotation.y) * cam_speed * delta;
+        camera.position.x -= sin_deg(camera.rotation.y) * cam_speed * delta;
     }
     if (is_key_pressed(SDLK_a))
     {
-        camera.position.z -= sin_deg(camera.rotation.y);
-        camera.position.x -= cos_deg(camera.rotation.y);
+        camera.position.z -= sin_deg(camera.rotation.y) * cam_speed * delta;
+        camera.position.x -= cos_deg(camera.rotation.y) * cam_speed * delta;
     }
     if (is_key_pressed(SDLK_d))
     {
-        camera.position.z += sin_deg(camera.rotation.y);
-        camera.position.x += cos_deg(camera.rotation.y);
+        camera.position.z += sin_deg(camera.rotation.y) * cam_speed * delta;
+        camera.position.x += cos_deg(camera.rotation.y) * cam_speed * delta;
     }
     if (is_key_pressed(SDLK_q))
-        camera.position.y += cam_speed;
+        camera.position.y += cam_speed * delta;
     if (is_key_pressed(SDLK_e))
-        camera.position.y -= cam_speed;
+        camera.position.y -= cam_speed * delta;
 
     if (is_key_pressed(SDLK_KP_5))
-        camera.rotation.x += cam_rot_speed;
+        camera.rotation.x += cam_rot_speed * delta;
     if (is_key_pressed(SDLK_KP_8))
-        camera.rotation.x -= cam_rot_speed;
+        camera.rotation.x -= cam_rot_speed * delta;
     if (is_key_pressed(SDLK_KP_4))
-        camera.rotation.y -= cam_rot_speed;
+        camera.rotation.y -= cam_rot_speed * delta;
     if (is_key_pressed(SDLK_KP_6))
-        camera.rotation.y += cam_rot_speed;
+        camera.rotation.y += cam_rot_speed * delta;
     if (is_key_pressed(SDLK_KP_7))
-        camera.rotation.z += cam_rot_speed;
+        camera.rotation.z += cam_rot_speed * delta;
     if (is_key_pressed(SDLK_KP_9))
-        camera.rotation.z -= cam_rot_speed;
+        camera.rotation.z -= cam_rot_speed * delta;
 
     draw();
 
@@ -117,17 +118,17 @@ void draw()
     set_projection_matrix(&projection, 90.0f, 0.1f, 100.0f, screen_width, screen_height);
 
     GLuint id = glGetUniformLocation(gl_shader_program, "proj_transform");
-    glUniformMatrix4fv(id, 1, GL_FALSE, projection);
+    glUniformMatrix4fv(id, 1, GL_FALSE, projection.mtx);
 
     camera_update_transform(&camera);
     id = glGetUniformLocation(gl_shader_program, "view_transform");
-    glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform);
+    glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform.mtx);
 
     ent2.rotation.y += 2.0f;
-    // entity_update_transform(&ent1);
+    entity_update_transform(&ent1);
     // entity_update_transform(&ent2);
 
-    // draw_entity(&ent1);
+    draw_entity(&ent1);
     // draw_entity(&ent2);
 
     stop_shader();

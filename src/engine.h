@@ -24,11 +24,12 @@ extern SDL_Renderer *renderer;
 
 extern int current_FPS;
 extern int target_FPS;
+extern float delta;
 
 extern int screen_width;
 extern int screen_height;
 
-int start_sdl_and_main_loop(bool (*main_loop)(float delta));
+int start_sdl_and_main_loop(bool (*main_loop)());
 int on_window_resize_event(void *data, SDL_Event *event);
 void dispose();
 void exit_app();

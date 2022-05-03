@@ -42,7 +42,8 @@
         "geo_teapot.h": "c",
         "geo_yoshi.h": "c",
         "geo_stall.h": "c",
-        "gl.h": "c"
+        "gl.h": "c",
+        "anim_0.h": "c"
     },
     "makefile.launchConfigurations": [
         {

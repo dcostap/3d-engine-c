@@ -10,4 +10,4 @@ typedef struct Camera
 } Camera;
 
 int main(int argc, char *argv[]);
-bool main_loop(float delta);
+bool main_loop();

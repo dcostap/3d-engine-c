@@ -1,5 +1,5 @@
-OUTDIRS := build obj/models obj/png
-SRCFILES := $(wildcard src/*.c) $(wildcard src/models/*.c) $(wildcard src/png/*.c)
+OUTDIRS := build obj/models obj/png obj/anims
+SRCFILES := $(wildcard src/*.c) $(wildcard src/models/*.c) $(wildcard src/png/*.c) $(wildcard src/anims/*.c)
 
 INCLUDES = -Iinclude -Iinclude/SDL/include -Iinclude/SDL2_gfx -Iinclude/glew/include
 CFLAGS = -Wall -Wextra -pg -std=c99 -Wno-unused-parameter -Wno-unknown-pragmas -O0
@@ -42,8 +42,7 @@ ${FULL_OUTPUT}: $(OBJFILES)
 	rm -rf build/assets/*
 	rsync -av -q assets/ build/assets
 
-	$(CC) $(CFLAGS) $(OBJFILES) $(LIBS) $(INCLUDES) -o $(FULL_OUTPUT)
-	strip $(FULL_OUTPUT)
+	$(CC) $(CFLAGS) -g $(OBJFILES) $(LIBS) $(INCLUDES) -o $(FULL_OUTPUT)
 	@echo ""
 	@echo "✅ Created release binary 🚀"
 	@echo "./$(FULL_OUTPUT) "
@@ -51,4 +50,4 @@ ${FULL_OUTPUT}: $(OBJFILES)
 -include $(DEPFILES)
 
 obj/%.o: src/%.c
-	$(CC) $(RELFLAGS) $(LIBS) $(CFLAGS) $(INCLUDES) -MMD -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@
+	$(CC) $(RELFLAGS) $(LIBS) $(CFLAGS) $(INCLUDES) -g -MMD -MF $(patsubst obj/%.o, obj/%.d, $@) -c $< -o $@

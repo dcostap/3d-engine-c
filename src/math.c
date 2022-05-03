@@ -27,6 +27,12 @@ float sin_deg(float degrees)
 
 #pragma region VECTORS
 
+void lerp_vectors(float progress, Vec3 start, Vec3 end, Vec3 *result) {
+    result->x = start.x + (end.x - start.x) * progress;
+    result->y = start.y + (end.y - start.y) * progress;
+    result->z = start.z + (end.z - start.z) * progress;
+}
+
 void rotate_vector(Vec3 *vector, float rotation_x, float rotation_y, float rotation_z)
 {
     float cosa = cos_deg(rotation_z);
@@ -153,7 +159,7 @@ void print_matrix(Mat4 mtx)
         printf("[");
         for (int j = 0; j < 4; j++)
         {
-            printf("%f, ", mtx[j + 4 * i]);
+            printf("%f, ", mtx.mtx[j + 4 * i]);
         }
         printf("]\n");
     }
@@ -171,26 +177,26 @@ void set_projection_matrix(Mat4 *mtx, float fov, float near, float far, int widt
     float frustrum_length = far - near;
 
     //    [column + row * 4]
-    (*mtx)[0 + 0 * 4] = x_scale;
-    (*mtx)[1 + 1 * 4] = y_scale;
-    (*mtx)[2 + 2 * 4] = -(far + near) / frustrum_length;
-    (*mtx)[3 + 2 * 4] = -1.0f;
-    (*mtx)[2 + 3 * 4] = -(2 * far * near) / frustrum_length;
-    (*mtx)[3 + 3 * 4] = 0.0f;
+    mtx->mtx[0 + 0 * 4] = x_scale;
+    mtx->mtx[1 + 1 * 4] = y_scale;
+    mtx->mtx[2 + 2 * 4] = -(far + near) / frustrum_length;
+    mtx->mtx[3 + 2 * 4] = -1.0f;
+    mtx->mtx[2 + 3 * 4] = -(2 * far * near) / frustrum_length;
+    mtx->mtx[3 + 3 * 4] = 0.0f;
 }
 
 void mat4_scale_by_vec3(Mat4 *mtx, Vec3 vec)
 {
     //    [column + row * 4]
-    (*mtx)[0 + 0 * 4] *= vec.x;
-    (*mtx)[0 + 1 * 4] *= vec.x;
-    (*mtx)[0 + 2 * 4] *= vec.x;
-    (*mtx)[1 + 0 * 4] *= vec.y;
-    (*mtx)[1 + 1 * 4] *= vec.y;
-    (*mtx)[1 + 2 * 4] *= vec.y;
-    (*mtx)[2 + 0 * 4] *= vec.z;
-    (*mtx)[2 + 1 * 4] *= vec.z;
-    (*mtx)[2 + 2 * 4] *= vec.z;
+    mtx->mtx[0 + 0 * 4] *= vec.x;
+    mtx->mtx[0 + 1 * 4] *= vec.x;
+    mtx->mtx[0 + 2 * 4] *= vec.x;
+    mtx->mtx[1 + 0 * 4] *= vec.y;
+    mtx->mtx[1 + 1 * 4] *= vec.y;
+    mtx->mtx[1 + 2 * 4] *= vec.y;
+    mtx->mtx[2 + 0 * 4] *= vec.z;
+    mtx->mtx[2 + 1 * 4] *= vec.z;
+    mtx->mtx[2 + 2 * 4] *= vec.z;
 }
 
 void mat4_rotate_around_vec3(Mat4 *mtx, struct Vec3 *vec)
@@ -211,42 +217,42 @@ void mat4_rotate_around_vec3(Mat4 *mtx, struct Vec3 *vec)
 
 void mat4_set_identity(Mat4 *mtx)
 {
-    (*mtx)[0 + 0 * 4] = 1.0f;
-    (*mtx)[0 + 1 * 4] = 0.0f;
-    (*mtx)[0 + 2 * 4] = 0.0f;
-    (*mtx)[0 + 3 * 4] = 0.0f;
-    (*mtx)[1 + 0 * 4] = 0.0f;
-    (*mtx)[1 + 1 * 4] = 1.0f;
-    (*mtx)[1 + 2 * 4] = 0.0f;
-    (*mtx)[1 + 3 * 4] = 0.0f;
-    (*mtx)[2 + 0 * 4] = 0.0f;
-    (*mtx)[2 + 1 * 4] = 0.0f;
-    (*mtx)[2 + 2 * 4] = 1.0f;
-    (*mtx)[2 + 3 * 4] = 0.0f;
-    (*mtx)[3 + 0 * 4] = 0.0f;
-    (*mtx)[3 + 1 * 4] = 0.0f;
-    (*mtx)[3 + 2 * 4] = 0.0f;
-    (*mtx)[3 + 3 * 4] = 1.0f;
+    mtx->mtx[0 + 0 * 4] = 1.0f;
+    mtx->mtx[0 + 1 * 4] = 0.0f;
+    mtx->mtx[0 + 2 * 4] = 0.0f;
+    mtx->mtx[0 + 3 * 4] = 0.0f;
+    mtx->mtx[1 + 0 * 4] = 0.0f;
+    mtx->mtx[1 + 1 * 4] = 1.0f;
+    mtx->mtx[1 + 2 * 4] = 0.0f;
+    mtx->mtx[1 + 3 * 4] = 0.0f;
+    mtx->mtx[2 + 0 * 4] = 0.0f;
+    mtx->mtx[2 + 1 * 4] = 0.0f;
+    mtx->mtx[2 + 2 * 4] = 1.0f;
+    mtx->mtx[2 + 3 * 4] = 0.0f;
+    mtx->mtx[3 + 0 * 4] = 0.0f;
+    mtx->mtx[3 + 1 * 4] = 0.0f;
+    mtx->mtx[3 + 2 * 4] = 0.0f;
+    mtx->mtx[3 + 3 * 4] = 1.0f;
 }
 
 void mat4_copy_to(const Mat4 *src, Mat4 *dst)
 {
-    (*dst)[0 + 0 * 4] = (*src)[0 + 0 * 4];
-    (*dst)[0 + 1 * 4] = (*src)[0 + 1 * 4];
-    (*dst)[0 + 2 * 4] = (*src)[0 + 2 * 4];
-    (*dst)[0 + 3 * 4] = (*src)[0 + 3 * 4];
-    (*dst)[1 + 0 * 4] = (*src)[1 + 0 * 4];
-    (*dst)[1 + 1 * 4] = (*src)[1 + 1 * 4];
-    (*dst)[1 + 2 * 4] = (*src)[1 + 2 * 4];
-    (*dst)[1 + 3 * 4] = (*src)[1 + 3 * 4];
-    (*dst)[2 + 0 * 4] = (*src)[2 + 0 * 4];
-    (*dst)[2 + 1 * 4] = (*src)[2 + 1 * 4];
-    (*dst)[2 + 2 * 4] = (*src)[2 + 2 * 4];
-    (*dst)[2 + 3 * 4] = (*src)[2 + 3 * 4];
-    (*dst)[3 + 0 * 4] = (*src)[3 + 0 * 4];
-    (*dst)[3 + 1 * 4] = (*src)[3 + 1 * 4];
-    (*dst)[3 + 2 * 4] = (*src)[3 + 2 * 4];
-    (*dst)[3 + 3 * 4] = (*src)[3 + 3 * 4];
+    dst->mtx[0 + 0 * 4] = src->mtx[0 + 0 * 4];
+    dst->mtx[0 + 1 * 4] = src->mtx[0 + 1 * 4];
+    dst->mtx[0 + 2 * 4] = src->mtx[0 + 2 * 4];
+    dst->mtx[0 + 3 * 4] = src->mtx[0 + 3 * 4];
+    dst->mtx[1 + 0 * 4] = src->mtx[1 + 0 * 4];
+    dst->mtx[1 + 1 * 4] = src->mtx[1 + 1 * 4];
+    dst->mtx[1 + 2 * 4] = src->mtx[1 + 2 * 4];
+    dst->mtx[1 + 3 * 4] = src->mtx[1 + 3 * 4];
+    dst->mtx[2 + 0 * 4] = src->mtx[2 + 0 * 4];
+    dst->mtx[2 + 1 * 4] = src->mtx[2 + 1 * 4];
+    dst->mtx[2 + 2 * 4] = src->mtx[2 + 2 * 4];
+    dst->mtx[2 + 3 * 4] = src->mtx[2 + 3 * 4];
+    dst->mtx[3 + 0 * 4] = src->mtx[3 + 0 * 4];
+    dst->mtx[3 + 1 * 4] = src->mtx[3 + 1 * 4];
+    dst->mtx[3 + 2 * 4] = src->mtx[3 + 2 * 4];
+    dst->mtx[3 + 3 * 4] = src->mtx[3 + 3 * 4];
 }
 
 Vec3 X_AXIS = {1.0f, 0.0f, 0.0f};
@@ -269,14 +275,14 @@ void mat4_mul(Mat4 *m1, const Mat4 *m2)
     float tmp[4];
     for (int j = 0; j < 4; j++)
     {
-        tmp[0] = (*m1)[j];
-        tmp[1] = (*m1)[4 + j];
-        tmp[2] = (*m1)[8 + j];
-        tmp[3] = (*m1)[12 + j];
+        tmp[0] = m1->mtx[j];
+        tmp[1] = m1->mtx[4 + j];
+        tmp[2] = m1->mtx[8 + j];
+        tmp[3] = m1->mtx[12 + j];
         for (int i = 0; i < 4; i++)
         {
-            (*m1)[4 * i + j] = (*m2)[4 * i] * tmp[0] + (*m2)[4 * i + 1] * tmp[1] +
-                               (*m2)[4 * i + 2] * tmp[2] + (*m2)[4 * i + 3] * tmp[3];
+            m1->mtx[4 * i + j] = m2->mtx[4 * i] * tmp[0] + m2->mtx[4 * i + 1] * tmp[1] +
+                               m2->mtx[4 * i + 2] * tmp[2] + m2->mtx[4 * i + 3] * tmp[3];
         }
     }
 }
@@ -302,29 +308,29 @@ void mat4_set_to_rotation_matrix(Mat4 *mtx, Vec3 axis, float angle_degrees)
 
     oneMinusCos = 1.0 - c;
 
-    (*mtx)[0 + 0 * 4] = oneMinusCos * axis.x * axis.x + c;
-    (*mtx)[0 + 1 * 4] = oneMinusCos * axis.x * axis.y + s * axis.z;
-    (*mtx)[0 + 2 * 4] = oneMinusCos * axis.x * axis.z - s * axis.y;
-    (*mtx)[0 + 3 * 4] = 0.0f;
-    (*mtx)[1 + 0 * 4] = oneMinusCos * axis.x * axis.y - s * axis.z;
-    (*mtx)[1 + 1 * 4] = oneMinusCos * axis.y * axis.y + c;
-    (*mtx)[1 + 2 * 4] = oneMinusCos * axis.y * axis.z + s * axis.x;
-    (*mtx)[1 + 3 * 4] = 0.0f;
-    (*mtx)[2 + 0 * 4] = oneMinusCos * axis.x * axis.z + s * axis.y;
-    (*mtx)[2 + 1 * 4] = oneMinusCos * axis.y * axis.z - s * axis.x;
-    (*mtx)[2 + 2 * 4] = oneMinusCos * axis.z * axis.z + c;
-    (*mtx)[2 + 3 * 4] = 0.0f;
-    (*mtx)[3 + 0 * 4] = 0.0f;
-    (*mtx)[3 + 1 * 4] = 0.0f;
-    (*mtx)[3 + 2 * 4] = 0.0f;
-    (*mtx)[3 + 3 * 4] = 1.0f;
+    mtx->mtx[0 + 0 * 4] = oneMinusCos * axis.x * axis.x + c;
+    mtx->mtx[0 + 1 * 4] = oneMinusCos * axis.x * axis.y + s * axis.z;
+    mtx->mtx[0 + 2 * 4] = oneMinusCos * axis.x * axis.z - s * axis.y;
+    mtx->mtx[0 + 3 * 4] = 0.0f;
+    mtx->mtx[1 + 0 * 4] = oneMinusCos * axis.x * axis.y - s * axis.z;
+    mtx->mtx[1 + 1 * 4] = oneMinusCos * axis.y * axis.y + c;
+    mtx->mtx[1 + 2 * 4] = oneMinusCos * axis.y * axis.z + s * axis.x;
+    mtx->mtx[1 + 3 * 4] = 0.0f;
+    mtx->mtx[2 + 0 * 4] = oneMinusCos * axis.x * axis.z + s * axis.y;
+    mtx->mtx[2 + 1 * 4] = oneMinusCos * axis.y * axis.z - s * axis.x;
+    mtx->mtx[2 + 2 * 4] = oneMinusCos * axis.z * axis.z + c;
+    mtx->mtx[2 + 3 * 4] = 0.0f;
+    mtx->mtx[3 + 0 * 4] = 0.0f;
+    mtx->mtx[3 + 1 * 4] = 0.0f;
+    mtx->mtx[3 + 2 * 4] = 0.0f;
+    mtx->mtx[3 + 3 * 4] = 1.0f;
 }
 
 void mat4_translate_by_vec3(Mat4 *mtx, Vec3 vec)
 {
-    (*mtx)[0 + 4 * 3] += vec.x;
-    (*mtx)[1 + 4 * 3] += vec.y;
-    (*mtx)[2 + 4 * 3] += vec.z;
+    mtx->mtx[0 + 4 * 3] += vec.x;
+    mtx->mtx[1 + 4 * 3] += vec.y;
+    mtx->mtx[2 + 4 * 3] += vec.z;
 }
 
 void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up)
@@ -342,29 +348,29 @@ void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up)
 
     vec3_scl(&z_axis, -1.f, -1.f, -1.f);
 
-    (*mtx)[0 + 0 * 4] = x_axis.x;
-    (*mtx)[0 + 1 * 4] = x_axis.y;
-    (*mtx)[0 + 2 * 4] = x_axis.z;
-    (*mtx)[0 + 3 * 4] = -vec3_dot_product(x_axis, position);
-    (*mtx)[1 + 0 * 4] = y_axis.x;
-    (*mtx)[1 + 1 * 4] = y_axis.y;
-    (*mtx)[1 + 2 * 4] = y_axis.z;
-    (*mtx)[1 + 3 * 4] = -vec3_dot_product(y_axis, position);
-    (*mtx)[2 + 0 * 4] = z_axis.x;
-    (*mtx)[2 + 1 * 4] = z_axis.y;
-    (*mtx)[2 + 2 * 4] = z_axis.z;
-    (*mtx)[2 + 3 * 4] = -vec3_dot_product(z_axis, position);
-    (*mtx)[3 + 0 * 4] = 0.f;
-    (*mtx)[3 + 1 * 4] = 0.f;
-    (*mtx)[3 + 2 * 4] = 0.f;
-    (*mtx)[3 + 3 * 4] = 1.f;
+    mtx->mtx[0 + 0 * 4] = x_axis.x;
+    mtx->mtx[0 + 1 * 4] = x_axis.y;
+    mtx->mtx[0 + 2 * 4] = x_axis.z;
+    mtx->mtx[0 + 3 * 4] = -vec3_dot_product(x_axis, position);
+    mtx->mtx[1 + 0 * 4] = y_axis.x;
+    mtx->mtx[1 + 1 * 4] = y_axis.y;
+    mtx->mtx[1 + 2 * 4] = y_axis.z;
+    mtx->mtx[1 + 3 * 4] = -vec3_dot_product(y_axis, position);
+    mtx->mtx[2 + 0 * 4] = z_axis.x;
+    mtx->mtx[2 + 1 * 4] = z_axis.y;
+    mtx->mtx[2 + 2 * 4] = z_axis.z;
+    mtx->mtx[2 + 3 * 4] = -vec3_dot_product(z_axis, position);
+    mtx->mtx[3 + 0 * 4] = 0.f;
+    mtx->mtx[3 + 1 * 4] = 0.f;
+    mtx->mtx[3 + 2 * 4] = 0.f;
+    mtx->mtx[3 + 3 * 4] = 1.f;
 }
 
 void vec3_transform_by_mat4(Vec3 *vec, Mat4 *mtx)
 {
     float tmp[4];
     for (int i = 0; i < 4; ++i)
-        tmp[i] = vec->x * (*mtx)[i + 4 * 0] + vec->y * (*mtx)[i + 4 * 1] + vec->z + (*mtx)[i + 4 * 2];
+        tmp[i] = vec->x * mtx->mtx[i + 4 * 0] + vec->y * mtx->mtx[i + 4 * 1] + vec->z + mtx->mtx[i + 4 * 2];
 
     vec->x = tmp[0] / tmp[3];
     vec->y = tmp[1] / tmp[3];

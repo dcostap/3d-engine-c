@@ -24,12 +24,13 @@ class RawModelData:
 @dataclass
 class AnimBoneData:
     name: str = ""
+    index: int = None
     inverse_bind: list = field(default_factory=list)
     anim_keyframe_translation_timings: list = field(default_factory=list)
     anim_keyframe_translations: list = field(default_factory=list)
     anim_keyframe_rotations: list = field(default_factory=list)
     anim_keyframe_scales: list = field(default_factory=list)
-    children: list = field(default_factory=list)
+    children_indices: list = field(default_factory=list)
     parent_index: int = None
 
 
@@ -53,30 +54,54 @@ def export_anim_data(file: str, data: AnimData):
 
     bone_nodes_code = []
     for (index, bone) in data.bones_indexed.items():
+        has_children = len(bone.children_indices) > 0
+
+        if has_children:
+            indices = f"""\
+                static int {bone.name}_children_indices[] = {{
+                    { ", ".join([str(i) for i in bone.children_indices]) }
+                }};
+            """
+        else:
+            indices = ""
+
         bone_nodes_code.append(f"""\
+            static float {bone.name}_anim_keyframe_translation_timings[] = {{
+                {", ".join( ['{0:.5}f'.format(time) for time in bone.anim_keyframe_translation_timings] )}
+            }};
+
+            static Vec3 {bone.name}_anim_keyframe_translations[] = {{
+                {", ".join(
+                    [f"{{ {'{0:.5}f'.format(trans[0])}, {'{0:.5}f'.format(trans[1])}, {'{0:.5}f'.format(trans[2])} }}" for trans in bone.anim_keyframe_translations]
+                )}
+            }};
+
+            {indices}
+
             static AnimSkeletonBone {bone.name} = {{
                 .name = "{bone.name}",
+                .index = {bone.index},
                 .inverse_bind = {{
-                    {", ".join( ['{0:.5}f'.format(f) for f in bone.inverse_bind] )}
+                    .mtx = {{ {", ".join( ['{0:.5}f'.format(f) for f in bone.inverse_bind] )} }}
                 }},
                 .keyframe_size = {len(bone.anim_keyframe_translation_timings)},
-                .anim_keyframe_translation_timings = (float[]){{
-                    {", ".join( ['{0:.5}f'.format(time) for time in bone.anim_keyframe_translation_timings] )}
-                }},
-                .anim_keyframe_translations = (float[]){{
-                    {", ".join(
-                        [f"{{ {'{0:.5}f'.format(trans[0])}, {'{0:.5}f'.format(trans[1])}, {'{0:.5}f'.format(trans[2])} }}" for trans in bone.anim_keyframe_translations]
-                    )}
-                }},
+                .anim_keyframe_translation_timings = {bone.name}_anim_keyframe_translation_timings,
+                .anim_keyframe_translations = {bone.name}_anim_keyframe_translations,
+                .children_indices = { f"{bone.name}_children_indices" if has_children else "NULL"},
+                .children_size = { f"{len(bone.children_indices)}" if has_children else "0"},
             }};
         """)
 
     animation_code = f"""\
+        static Mat4 {data.name}_joint_transforms[{len(data.bones_indexed)}];
+        static AnimSkeletonBone *{data.name}_indexed_bones[] = {{ { ', '.join(["&" + bone.name for bone in data.bones_indexed.values()]) } }};
+
         SkeletonAnimation {data.name} = {{
             .name = \"{data.name}\",
             .skeleton_name = \"{data.skeleton_name}\",
-            .indexed_bones = {{ { ', '.join(["&" + bone.name for bone in data.bones_indexed.values()]) } }},
+            .indexed_bones = {data.name}_indexed_bones,
             .indexed_bones_size = {len(data.bones_indexed)},
+            .joint_transforms = {data.name}_joint_transforms,
         }};
     """
 
@@ -89,6 +114,7 @@ def export_anim_data(file: str, data: AnimData):
 
                 {animation_code}
             """))
+
 
 def export_model_data(file: str, data: RawModelData):
     # Store the processed info into new .c geo files
@@ -158,7 +184,7 @@ def export_model_data(file: str, data: RawModelData):
     if len(data.bones) > 0:
         bones_c_full = textwrap.dedent(
             f"""\
-                static float bones[{str(len(data.bones))}][4] = {{
+                static int bones[{str(len(data.bones))}][4] = {{
                     {bones_c}
                 }};
             """)
@@ -298,7 +324,8 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
                 for bones in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.JOINTS_0]):
                     v = struct.unpack("<BBBB", bones)
                     skin_data = skins[node.skin]
-                    mesh_data.bones.append([ skin_data.bones_global_index_to_local_index[index] for index in v ])
+                    mesh_data.bones.append(
+                        [skin_data.bones_global_index_to_local_index[index] for index in v])
 
                 for weights in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.WEIGHTS_0]):
                     v = struct.unpack("<ffff", weights)
@@ -321,18 +348,20 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
             inverse_binds = {}
             for index, matrix in enumerate(read_gltf_accessor_data(gltf, gltf.accessors[skin.skin_node.inverseBindMatrices])):
                 local_index = skin.bones_global_index_to_local_index[index]
-                inverse_binds[local_index] = struct.unpack("<ffffffffffffffff", matrix)
+                inverse_binds[local_index] = struct.unpack(
+                    "<ffffffffffffffff", matrix)
 
             for index, bone_node in enumerate(skin.bones_indexed):
                 bone_data = AnimBoneData()
                 processed_bones[index] = bone_data
 
+                bone_data.index = index
                 bone_data.name = bone_node.name
-                bone_data.children = list(bone_node.children)
+                bone_data.children_indices = [ skin.bones_global_index_to_local_index[index] for index in bone_node.children]
                 bone_data.inverse_bind = inverse_binds[index]
 
             for index, bone in processed_bones.items():
-                for child_index in bone.children:
+                for child_index in bone.children_indices:
                     child = processed_bones[skin.bones_global_index_to_local_index[child_index]]
                     child.parent_index = index
 
@@ -340,13 +369,16 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
             bone_index = channel.target.node
             animation_type = channel.target.path
 
-            skin_index_for_this_bone = next((sk for sk in skins if bone_index in skins[sk].bones_global_index_to_local_index.keys()), None)
+            skin_index_for_this_bone = next(
+                (sk for sk in skins if bone_index in skins[sk].bones_global_index_to_local_index.keys()), None)
 
             if skin_index_for_this_bone is None:
-                print(f"Bone in animation {anim.name} doesn't refer to any bone inside any Skin present in the file")
+                print(
+                    f"Bone in animation {anim.name} doesn't refer to any bone inside any Skin present in the file")
                 exit()
             elif skin_index_for_this_animation is not None and skin_index_for_this_bone != skin_index_for_this_animation:
-                print(f"Animation {anim.name} refers to nodes that belong to more than 1 skin!")
+                print(
+                    f"Animation {anim.name} refers to nodes that belong to more than 1 skin!")
                 exit()
             elif skin_index_for_this_animation is None:
                 skin_index_for_this_animation = skin_index_for_this_bone
@@ -362,13 +394,16 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
             for transform in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].output]):
                 if animation_type == 'translation':
                     bone_data.anim_keyframe_translation_timings = timings
-                    bone_data.anim_keyframe_translations.append(struct.unpack("<fff", transform))
+                    bone_data.anim_keyframe_translations.append(
+                        struct.unpack("<fff", transform))
                 elif animation_type == 'rotation':
                     # TODO timings
-                    bone_data.anim_keyframe_rotations.append(struct.unpack("<ffff", transform))
+                    bone_data.anim_keyframe_rotations.append(
+                        struct.unpack("<ffff", transform))
                 elif animation_type == 'scale':
                     # TODO timings
-                    bone_data.anim_keyframe_scales.append(struct.unpack("<fff", transform))
+                    bone_data.anim_keyframe_scales.append(
+                        struct.unpack("<fff", transform))
 
         anim_data.bones_indexed = processed_bones
         anim_data.skeleton_name = gltf.skins[skin_index_for_this_animation].name
@@ -387,7 +422,8 @@ def explore_folder_recursive(root):
 
                 data = parse_gltf_file(file)
                 export_model_data(file, data[0])
-                export_anim_data(file, data[1][0]) # ⚠️ We only export first anim for now
+                # ⚠️ We only export first anim for now
+                export_anim_data(file, data[1][0])
                 print(file + " finished, took %.2f seconds." %
                       (time.time() - start_time))
         else:

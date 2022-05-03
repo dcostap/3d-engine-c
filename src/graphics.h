@@ -34,6 +34,8 @@ typedef struct Mesh
 
 typedef struct AnimSkeletonBone {
     char *name;
+    int index;
+
     Mat4 inverse_bind;
 
     int keyframe_size;
@@ -42,8 +44,8 @@ typedef struct AnimSkeletonBone {
     // Quaternion *anim_keyframe_rotations;
     Vec3 *anim_keyframe_scales;
 
-    //TODO: I need the root node to apply transforms starting from there
-    struct AnimSkeletonBone **children;
+    int *children_indices;
+    int children_size;
 } AnimSkeletonBone;
 
 typedef struct SkeletonAnimation {
@@ -52,6 +54,7 @@ typedef struct SkeletonAnimation {
 
     AnimSkeletonBone **indexed_bones;
     int indexed_bones_size;
+    Mat4 *joint_transforms;
 } SkeletonAnimation;
 
 typedef struct Entity

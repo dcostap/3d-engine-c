@@ -916,7 +916,7 @@
 
 
 
-                                static float bones[453][4] = {
+                                static int bones[453][4] = {
                     { 7, 2, 4, 4 },
 { 7, 2, 6, 3 },
 { 7, 6, 2, 4 },

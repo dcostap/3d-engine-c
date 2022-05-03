@@ -15,7 +15,10 @@ typedef struct Vec3
     float z;
 } Vec3;
 
-typedef float Mat4[16];
+typedef struct Mat4
+{
+    float mtx[16];
+} Mat4;
 
 extern Vec3 X_AXIS;
 extern Vec3 Y_AXIS;
@@ -28,6 +31,7 @@ float sin_deg(float degrees);
 // Search-select function definitions
 // ^\w+ \w+\(.+(?=\))\)
 
+void lerp_vectors(float progress, Vec3 start, Vec3 end, Vec3 *result);
 void rotate_vector(Vec3 *vector, float rotation_x, float rotation_y, float rotation_z);
 float vec3_dot_product(Vec3 v1, Vec3 v2);
 float vec3_get_length(Vec3 v);

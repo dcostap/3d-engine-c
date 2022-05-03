@@ -5,13 +5,14 @@ int screen_height = 600;
 int target_FPS = 60;
 
 int current_FPS = 0;
+float delta = 0;
 
 SDL_Window *sdl_window;
 SDL_Surface *screen_surface;
 SDL_Renderer *renderer;
 SDL_GLContext context;
 
-int start_sdl_and_main_loop(bool (*main_loop)(float delta))
+int start_sdl_and_main_loop(bool (*main_loop)())
 {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -46,8 +47,8 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta))
     if (SDL_GL_SetSwapInterval(1) == -1)
     {
         printf("Error setting Vsync: %s\n", SDL_GetError());
-        dispose();
-        return 1;
+        // dispose();
+        // return 1;
     }
 
     bool quit = false;
@@ -85,7 +86,7 @@ int start_sdl_and_main_loop(bool (*main_loop)(float delta))
 
         last_time = SDL_GetTicks();
 
-        float delta = elapsed / 1000.0f;
+        delta = elapsed / 1000.0f;
 
         quit = main_loop(delta);
     }
