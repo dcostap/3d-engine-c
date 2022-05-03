@@ -25,6 +25,7 @@ class RawModelData:
 class AnimBoneData:
     name: str = ""
     index: int = None
+    position: list = field(default_factory=list)
     inverse_bind: list = field(default_factory=list)
     anim_keyframe_translation_timings: list = field(default_factory=list)
     anim_keyframe_translations: list = field(default_factory=list)
@@ -84,6 +85,7 @@ def export_anim_data(file: str, data: AnimData):
                 .inverse_bind = {{
                     .mtx = {{ {", ".join( ['{0:.5}f'.format(f) for f in bone.inverse_bind] )} }}
                 }},
+                .position = {{ .x = {bone.position[0]}, .y = {bone.position[1]}, .z = {bone.position[2]}, }},
                 .keyframe_size = {len(bone.anim_keyframe_translation_timings)},
                 .anim_keyframe_translation_timings = {bone.name}_anim_keyframe_translation_timings,
                 .anim_keyframe_translations = {bone.name}_anim_keyframe_translations,
@@ -359,6 +361,7 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
                 bone_data.name = bone_node.name
                 bone_data.children_indices = [ skin.bones_global_index_to_local_index[index] for index in bone_node.children]
                 bone_data.inverse_bind = inverse_binds[index]
+                bone_data.position = bone_node.translation
 
             for index, bone in processed_bones.items():
                 for child_index in bone.children_indices:

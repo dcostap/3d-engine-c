@@ -38,6 +38,8 @@ typedef struct AnimSkeletonBone {
 
     Mat4 inverse_bind;
 
+    Vec3 position;
+
     int keyframe_size;
     float *anim_keyframe_translation_timings;
     Vec3 *anim_keyframe_translations;

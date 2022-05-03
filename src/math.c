@@ -124,7 +124,7 @@ void vec3_add_values(Vec3 *dest, float x_add, float y_add, float z_add)
 
 void print_vector(Vec3 vec)
 {
-    printf("[%.2f, %.2f, %.2f]\n", vec.x, vec.y, vec.z);
+    printf("[%.6f, %.6f, %.6f]\n", vec.x, vec.y, vec.z);
 }
 
 void vec3_sub(Vec3 *dest, Vec3 a)

@@ -43,7 +43,8 @@
         "geo_yoshi.h": "c",
         "geo_stall.h": "c",
         "gl.h": "c",
-        "anim_0.h": "c"
+        "anim_0.h": "c",
+        "geo_rigged_figure.h": "c"
     },
     "makefile.launchConfigurations": [
         {
