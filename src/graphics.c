@@ -315,26 +315,9 @@ void process_bone(float anim_time, AnimSkeletonBone *bone, Mat4 parent_transform
 
     lerp_vectors(interpolation_needed, previous_translation, next_translation, &new_translation);
 
-    if (strcmp(bone->name, "arm_joint_R_3") == false)
-    {
-        // printf(bone->name);
-        // print_vector(next_translation);
-        // print_vector(previous_translation);
-        // lerp_vectors(interpolation_needed, previous_translation, next_translation, &new_translation);
-
-        // printf("%f\n", interpolation_needed);
-        // new_translation.x = 0.8f;
-        // new_translation.y = 0.0f;
-        // new_translation.z = 0.0f;
-        // print_vector(new_translation);
-        // printf("%d\n", bone->index);
-    }
-
     Mat4 transf;
     mat4_set_identity(&transf);
-    print_mat4(transf);
-    // mat4_translate_by_vec3(&transf, bone->position);
-    mat4_translate_by_vec3(&transf, new_translation);
+    // mat4_translate_by_vec3(&transf, new_translation);
 
     mat4_mul(&transf, &parent_transform);
 
@@ -343,11 +326,9 @@ void process_bone(float anim_time, AnimSkeletonBone *bone, Mat4 parent_transform
         process_bone(anim_time, anim->indexed_bones[bone->children_indices[i]], transf, anim);
     }
 
-    // mat4_invert(&bone->inverse_bind);
-    // mat4_transpose(&bone->inverse_bind);
-    // mat4_mul(&transf, &bone->inverse_bind);
-    // mat4_transpose(&bone->inverse_bind);
-    // mat4_invert(&bone->inverse_bind);
+    mat4_mul(&transf, &bone->inverse_bind);
+
+    printf("%s\n", bone->name);
 
     anim->joint_transforms[bone->index] = transf;
 

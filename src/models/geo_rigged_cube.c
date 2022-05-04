@@ -155,7 +155,7 @@
                     .indices_size = 36,
                     .uvs = uvs,
                     .uvs_size = 24,
-                    .texture_file = "./assets/models/rigged_cube.png",
+                    .texture_file = NULL,
                     .bones = bones,
                     .bones_size = 24,
                     .weights = weights,

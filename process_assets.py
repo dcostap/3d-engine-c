@@ -358,7 +358,7 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
         def initalize_bones(skin):
             inverse_binds = {}
             for index, matrix in enumerate(read_gltf_accessor_data(gltf, gltf.accessors[skin.skin_node.inverseBindMatrices])):
-                local_index = skin.bones_global_index_to_local_index[index]
+                local_index = skin.bones_global_index_to_local_index[skin.skin_node.joints[index]]
                 inverse_binds[local_index] = struct.unpack(
                     "<ffffffffffffffff", matrix)
 

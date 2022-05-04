@@ -378,6 +378,18 @@ void vec3_transform_by_mat4(Vec3 *vec, Mat4 *mtx)
     vec->z = tmp[2] / tmp[3];
 }
 
+void mat4_get_translation(Mat4 *src, Vec3 *dst) {
+    dst->x = src->mtx[3];
+    dst->y = src->mtx[7];
+    dst->y = src->mtx[11];
+}
+
+void mat4_get_scale(Mat4 *src, Vec3 *dst) {
+    dst->x = src->mtx[3];
+    dst->y = src->mtx[7];
+    dst->y = src->mtx[11];
+}
+
 void mat4_transpose(Mat4 *mat) {
     float a01 = mat->mtx[1];
     float a02 = mat->mtx[2];

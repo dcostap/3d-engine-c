@@ -59,3 +59,4 @@ void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up);
 void mat4_transpose(Mat4 *mat);
 void mat4_invert(Mat4 *mat);
 void print_mat4(Mat4 mat);
+void mat4_get_translation(Mat4 *src, Vec3 *dst);

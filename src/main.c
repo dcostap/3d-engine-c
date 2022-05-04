@@ -10,7 +10,7 @@ void check_gl_errors(char *context);
 void draw();
 
 Entity ent1 = {
-    .position = {0.0f, 0.0f, -1.0f},
+    .position = {0.0f, 0.0f, 0.0f},
     .rotation = {0.0f, 0.0f, 0.0f},
     .scale = {1.0f, 1.0f, 1.0f},
 };
