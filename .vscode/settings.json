@@ -44,7 +44,9 @@
         "geo_stall.h": "c",
         "gl.h": "c",
         "anim_0.h": "c",
-        "geo_rigged_figure.h": "c"
+        "geo_rigged_figure.h": "c",
+        "stdlib.h": "c",
+        "geo_rigged_cube.h": "c"
     },
     "makefile.launchConfigurations": [
         {

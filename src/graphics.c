@@ -132,7 +132,7 @@ void bind_mesh_to_opengl(Mesh *mesh)
 
     if (mesh->bones != NULL)
     {
-        store_int_data_in_vbo(mesh->bones, sizeof(mesh->bones[0]) * mesh->bones_size, 4, "in_bones");
+        store_int_data_in_vbo(mesh->bones, sizeof(mesh->bones[0]) * mesh->bones_size, 4, "in_joints");
     }
 
     glBindVertexArray(0);
@@ -197,8 +197,47 @@ void draw_entity(Entity *ent)
     {
         reset_animation_matrices(&ArmatureAction);
         calculate_animation_joint_matrices(anim_time, &ArmatureAction);
-        id = glGetUniformLocation(gl_shader_program, "joint_matrices");
-        glUniformMatrix4fv(id, 19, GL_FALSE, ArmatureAction.joint_transforms[0].mtx);
+
+        for (int i = 0; i < 19; i++) {
+            // Mat4 m;
+            // mat4_set_identity(m.mtx);
+
+            // if (i == 1) {
+            //     Vec3 v = { anim_time, 0.0f, 0.0f};
+            //     mat4_translate_by_vec3(&m, v);
+            // }
+
+// print_mat4(ArmatureAction.joint_transforms[i]);
+
+            char *name;
+            asprintf(&name, "joint_matrices[%d]", i);
+            id = glGetUniformLocation(gl_shader_program, name);
+            glUniformMatrix4fv(id, 1, GL_FALSE, ArmatureAction.joint_transforms[i].mtx);
+        }
+
+
+// float data[19 * 16];
+//         for (int i = 0; i < 19; i++) {
+//             // Mat4 m;
+//             // mat4_set_identity(m.mtx);
+
+//             // if (i == 1) {
+//             //     Vec3 v = { anim_time, 0.0f, 0.0f};
+//             //     mat4_translate_by_vec3(&m, v);
+//             // }
+
+//             // char *name;
+//             // asprintf(&name, "joint_matrices[%d]", i);
+
+//             for (int j = 0; j < 16; j++) {
+//                 data[j + i * 16] = ArmatureAction.joint_transforms[i].mtx[j];
+//             }
+
+//         }
+
+//         id = glGetUniformLocation(gl_shader_program, "joint_matrices");
+//         glUniformMatrix4fv(id, 19 * 16, GL_FALSE, data);
+
 
         // for (int i = 0; i < ArmatureAction.indexed_bones_size; i ++) {
         //     for (int a = 0; a < 4; a++) {
@@ -247,9 +286,10 @@ void calculate_animation_joint_matrices(float anim_time, SkeletonAnimation *anim
 
 void process_bone(float anim_time, AnimSkeletonBone *bone, Mat4 parent_transform, SkeletonAnimation *anim)
 {
-    Vec3 new_translation;
-    Vec3 previous_translation;
-    Vec3 next_translation;
+    Vec3 new_translation = {0};
+    Vec3 previous_translation = {0};
+    Vec3 next_translation = {0};
+
     float interpolation_needed = -1.0f;
 
     for (int i = 0; i < bone->keyframe_size; i++)
@@ -275,35 +315,41 @@ void process_bone(float anim_time, AnimSkeletonBone *bone, Mat4 parent_transform
 
     lerp_vectors(interpolation_needed, previous_translation, next_translation, &new_translation);
 
-    if (strcmp(bone->name, "arm_joint_R_1") == false)
+    if (strcmp(bone->name, "arm_joint_R_3") == false)
     {
-        printf(bone->name);
-        print_vector(next_translation);
-        print_vector(previous_translation);
-        print_vector(new_translation);
-        printf("%f\n", interpolation_needed);
+        // printf(bone->name);
+        // print_vector(next_translation);
+        // print_vector(previous_translation);
+        // lerp_vectors(interpolation_needed, previous_translation, next_translation, &new_translation);
+
+        // printf("%f\n", interpolation_needed);
+        // new_translation.x = 0.8f;
+        // new_translation.y = 0.0f;
+        // new_translation.z = 0.0f;
+        // print_vector(new_translation);
+        // printf("%d\n", bone->index);
     }
 
     Mat4 transf;
     mat4_set_identity(&transf);
+    print_mat4(transf);
+    // mat4_translate_by_vec3(&transf, bone->position);
     mat4_translate_by_vec3(&transf, new_translation);
-    mat4_translate_by_vec3(&transf, bone->position);
 
     mat4_mul(&transf, &parent_transform);
 
-    Mat4 final_transf;
-    memcpy(&final_transf, &transf.mtx, ARRAY_LENGTH_STACK(transf.mtx) * sizeof(float));
-    mat4_mul(&final_transf, &bone->inverse_bind);
-
-    // test
-    mat4_set_identity(&final_transf);
-    mat4_translate_by_vec3(&final_transf, new_translation);
-    // test
-
-    memcpy(&anim->joint_transforms[bone->index], &final_transf, sizeof(final_transf));
-
     for (int i = 0; i < bone->children_size; i++)
     {
-        process_bone(anim_time, anim->indexed_bones[bone->children_indices[i]], final_transf, anim);
+        process_bone(anim_time, anim->indexed_bones[bone->children_indices[i]], transf, anim);
     }
+
+    // mat4_invert(&bone->inverse_bind);
+    // mat4_transpose(&bone->inverse_bind);
+    // mat4_mul(&transf, &bone->inverse_bind);
+    // mat4_transpose(&bone->inverse_bind);
+    // mat4_invert(&bone->inverse_bind);
+
+    anim->joint_transforms[bone->index] = transf;
+
+    // memcpy(&anim->joint_transforms[bone->index], &transf, sizeof(transf));
 }

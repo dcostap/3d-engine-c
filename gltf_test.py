@@ -23,6 +23,16 @@ def read_gltf_accessor_data(gltf, accessor) -> list:
 # GLTF format notes
 # https://www.khronos.org/files/gltf20-reference-guide.pdf
 #
+# POST-SKINNING NOTES:
+# ⚠️ In every armature, there must be at least one bone assigned per vertex, due to how GLTF exports the vertex-bone association
+#       (when no bone in a index slot, exported index is 0, but with weight 0. But if there is 0 bones associated, defaults to "weight of 1 in bone 0")
+#       (this is probs. due to how vertex skinning is calculated, there must be always a matrix you can transform the vertex with)
+#       so, always have a root bone that affects every vertex. This is the standard practice.
+#       otherwise the anim you see in blender is diff than what you'll see in GLTF viewers
+#
+#
+# PRE-SKINNNING CODE NOTES:
+#
 # Scenes: ignore it, we'll have just one
 # nodes: stuff that has a position etc in the scene: meshes & bones
 #   may reference a mesh

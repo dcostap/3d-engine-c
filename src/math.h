@@ -56,3 +56,6 @@ void mat4_translate_by_vec3(Mat4 *mtx, Vec3 vec);
 void vec3_transform_by_mat4(Vec3 *vec, Mat4 *mtx);
 void set_projection_matrix(Mat4 *mtx, float fov, float near, float far, int width, int height);
 void mat4_look_at(Mat4 *mtx, Vec3 position, Vec3 look_at, Vec3 up);
+void mat4_transpose(Mat4 *mat);
+void mat4_invert(Mat4 *mat);
+void print_mat4(Mat4 mat);

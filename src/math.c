@@ -148,6 +148,7 @@ void vec3_cross(Vec3 *dest, Vec3 a, Vec3 b)
     dest->z = a.x * b.y - b.x * a.y;
 }
 
+
 #pragma endregion
 
 #pragma region MATRICES
@@ -255,9 +256,9 @@ void mat4_copy_to(const Mat4 *src, Mat4 *dst)
     dst->mtx[3 + 3 * 4] = src->mtx[3 + 3 * 4];
 }
 
-Vec3 X_AXIS = {1.0f, 0.0f, 0.0f};
-Vec3 Y_AXIS = {0.0f, 1.0f, 0.0f};
-Vec3 Z_AXIS = {0.0f, 0.0f, 1.0f};
+Vec3 X_AXIS = { 1.0f, 0.0f, 0.0f };
+Vec3 Y_AXIS = { 0.0f, 1.0f, 0.0f };
+Vec3 Z_AXIS = { 0.0f, 0.0f, 1.0f };
 
 /**
  * Rotates a mat4f matrix about a given axis
@@ -282,7 +283,7 @@ void mat4_mul(Mat4 *m1, const Mat4 *m2)
         for (int i = 0; i < 4; i++)
         {
             m1->mtx[4 * i + j] = m2->mtx[4 * i] * tmp[0] + m2->mtx[4 * i + 1] * tmp[1] +
-                               m2->mtx[4 * i + 2] * tmp[2] + m2->mtx[4 * i + 3] * tmp[3];
+                m2->mtx[4 * i + 2] * tmp[2] + m2->mtx[4 * i + 3] * tmp[3];
         }
     }
 }
@@ -375,6 +376,98 @@ void vec3_transform_by_mat4(Vec3 *vec, Mat4 *mtx)
     vec->x = tmp[0] / tmp[3];
     vec->y = tmp[1] / tmp[3];
     vec->z = tmp[2] / tmp[3];
+}
+
+void mat4_transpose(Mat4 *mat) {
+    float a01 = mat->mtx[1];
+    float a02 = mat->mtx[2];
+    float a03 = mat->mtx[3];
+    float a12 = mat->mtx[6];
+    float a13 = mat->mtx[7];
+    float a23 = mat->mtx[11];
+
+    mat->mtx[1] = mat->mtx[4];
+    mat->mtx[2] = mat->mtx[8];
+    mat->mtx[3] = mat->mtx[12];
+    mat->mtx[4] = a01;
+    mat->mtx[6] = mat->mtx[9];
+    mat->mtx[7] = mat->mtx[13];
+    mat->mtx[8] = a02;
+    mat->mtx[9] = a12;
+    mat->mtx[11] = mat->mtx[14];
+    mat->mtx[12] = a03;
+    mat->mtx[13] = a13;
+    mat->mtx[14] = a23;
+}
+
+void mat4_invert(Mat4 *mat) {
+    float a00 = mat->mtx[0];
+    float a01 = mat->mtx[1];
+    float a02 = mat->mtx[2];
+    float a03 = mat->mtx[3];
+    float a10 = mat->mtx[4];
+    float a11 = mat->mtx[5];
+    float a12 = mat->mtx[6];
+    float a13 = mat->mtx[7];
+    float a20 = mat->mtx[8];
+    float a21 = mat->mtx[9];
+    float a22 = mat->mtx[10];
+    float a23 = mat->mtx[11];
+    float a30 = mat->mtx[12];
+    float a31 = mat->mtx[13];
+    float a32 = mat->mtx[14];
+    float a33 = mat->mtx[15];
+
+    float b00 = a00 * a11 - a01 * a10;
+    float b01 = a00 * a12 - a02 * a10;
+    float b02 = a00 * a13 - a03 * a10;
+    float b03 = a01 * a12 - a02 * a11;
+    float b04 = a01 * a13 - a03 * a11;
+    float b05 = a02 * a13 - a03 * a12;
+    float b06 = a20 * a31 - a21 * a30;
+    float b07 = a20 * a32 - a22 * a30;
+    float b08 = a20 * a33 - a23 * a30;
+    float b09 = a21 * a32 - a22 * a31;
+    float b10 = a21 * a33 - a23 * a31;
+    float b11 = a22 * a33 - a23 * a32;
+
+    // Calculate the determinant
+    float det =
+        b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+    if (!det) {
+        printf("mat4_invert: Invalid matrix input?\n");
+        return;
+    }
+
+    det = 1.0f / det;
+
+    mat->mtx[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+    mat->mtx[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+    mat->mtx[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+    mat->mtx[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+    mat->mtx[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+    mat->mtx[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+    mat->mtx[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+    mat->mtx[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+    mat->mtx[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+    mat->mtx[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+    mat->mtx[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+    mat->mtx[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+    mat->mtx[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+    mat->mtx[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+    mat->mtx[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+    mat->mtx[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+}
+
+void print_mat4(Mat4 mat) {
+    for (int a = 0; a < 4; a++) {
+        for (int b = 0; b < 4; b++) {
+            printf("%.2f  ", mat.mtx[b + (a * 4)]);
+        }
+        printf("\n");
+    }
+    printf("_________\n");
 }
 
 #pragma endregion

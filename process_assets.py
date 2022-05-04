@@ -66,6 +66,13 @@ def export_anim_data(file: str, data: AnimData):
         else:
             indices = ""
 
+        if bone.position:
+            bone_position = f"""\
+                .position = {{ .x = {bone.position[0]}, .y = {bone.position[1]}, .z = {bone.position[2]}, }},
+            """
+        else:
+            bone_position = ""
+
         bone_nodes_code.append(f"""\
             static float {bone.name}_anim_keyframe_translation_timings[] = {{
                 {", ".join( ['{0:.5}f'.format(time) for time in bone.anim_keyframe_translation_timings] )}
@@ -85,7 +92,7 @@ def export_anim_data(file: str, data: AnimData):
                 .inverse_bind = {{
                     .mtx = {{ {", ".join( ['{0:.5}f'.format(f) for f in bone.inverse_bind] )} }}
                 }},
-                .position = {{ .x = {bone.position[0]}, .y = {bone.position[1]}, .z = {bone.position[2]}, }},
+                {bone_position}
                 .keyframe_size = {len(bone.anim_keyframe_translation_timings)},
                 .anim_keyframe_translation_timings = {bone.name}_anim_keyframe_translation_timings,
                 .anim_keyframe_translations = {bone.name}_anim_keyframe_translations,
@@ -325,9 +332,11 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
                 mesh_data.skeleton_name = gltf.skins[node.skin].name
                 for bones in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.JOINTS_0]):
                     v = struct.unpack("<BBBB", bones)
+                    print(v)
                     skin_data = skins[node.skin]
+                    # very tricky... Node's JOINTS_N referes to an index in the skin's joints array, instead of index to the joint node in the scene
                     mesh_data.bones.append(
-                        [skin_data.bones_global_index_to_local_index[index] for index in v])
+                        [skin_data.bones_global_index_to_local_index[gltf.skins[node.skin].joints[index]] for index in v])
 
                 for weights in read_gltf_accessor_data(gltf, gltf.accessors[primitive.attributes.WEIGHTS_0]):
                     v = struct.unpack("<ffff", weights)
@@ -358,7 +367,7 @@ def parse_gltf_file(file: str) -> Tuple[RawModelData, list]:
                 processed_bones[index] = bone_data
 
                 bone_data.index = index
-                bone_data.name = bone_node.name
+                bone_data.name = bone_node.name.replace(".", "_")
                 bone_data.children_indices = [ skin.bones_global_index_to_local_index[index] for index in bone_node.children]
                 bone_data.inverse_bind = inverse_binds[index]
                 bone_data.position = bone_node.translation
