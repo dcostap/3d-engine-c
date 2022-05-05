@@ -1,6 +1,7 @@
 #include "main.h"
 #include "input.h"
-#include "models/geo_Cylinder.h"
+#include "models/geo_Cesium_Man.h"
+#include "anims/animation_CesiumMan.h"
 
 Camera camera;
 
@@ -9,10 +10,17 @@ void entity_update_transform(Entity *ent);
 void check_gl_errors(char *context);
 void draw();
 
+EntityAnimation a = (EntityAnimation){
+        .data = &animation_CesiumMan
+    };
+
 Entity ent1 = {
     .position = {0.0f, 0.0f, 0.0f},
     .rotation = {0.0f, 0.0f, 0.0f},
     .scale = {1.0f, 1.0f, 1.0f},
+    .animation = &a /*&(EntityAnimation){
+        .data = &animation_CesiumMan
+    }*/,
 };
 
 Entity ent2 = {
@@ -28,6 +36,9 @@ int main(int argc, char *argv[])
 
 static bool is_first_loop = true;
 
+float mouse_mov_x = 0.0f;
+float mouse_mov_y = 0.0f;
+
 bool main_loop()
 {
     if (is_first_loop)
@@ -39,23 +50,42 @@ bool main_loop()
             return true;
         }
 
-        ent1.mesh = &geo_Cylinder;
+        ent1.mesh = &geo_Cesium_Man;
         // ent2.mesh = &geo_untitled;
 
-        bind_mesh_to_opengl(&geo_Cylinder);
+        bind_mesh_to_opengl(&geo_Cesium_Man);
         // bind_mesh_to_opengl(&geo_untitled);
 
         camera.position.z = 15.f;
+
+        // SDL_SetWindowGrab(sdl_window, true);
+        // SDL_ShowCursor(SDL_ENABLE);
+        SDL_SetRelativeMouseMode(true);
     }
 
-    update_input();
+    reset_key_inputs();
 
-    if (is_there_event(SDL_QUIT)) {
+    mouse_mov_x = 0.0f;
+    mouse_mov_y = 0.0f;
+
+    SDL_Event e;
+    while (SDL_PollEvent(&e))
+    {
+        update_key_inputs(e);
+
+        if (e.type == SDL_MOUSEMOTION) {
+            mouse_mov_x = e.motion.xrel;
+            mouse_mov_y = e.motion.yrel;
+        }
+    }
+
+    if (is_there_event(SDL_QUIT))
+    {
         exit_app();
         return 0;
     }
 
-    float cam_speed = 30.0f;
+    float cam_speed = 20.0f;
     float cam_rot_speed = 50.0f;
 
     if (is_key_pressed(SDLK_ESCAPE))
@@ -99,6 +129,9 @@ bool main_loop()
     if (is_key_pressed(SDLK_KP_9))
         camera.rotation.z -= cam_rot_speed * delta;
 
+    camera.rotation.y += mouse_mov_x;
+    camera.rotation.x += mouse_mov_y;
+
     draw();
 
     return false;
@@ -136,7 +169,7 @@ void draw()
     SDL_GL_SwapWindow(sdl_window);
 }
 
-void camera_update_transform(Camera* camera)
+void camera_update_transform(Camera *camera)
 {
     Mat4 rot;
     mat4_set_identity(&rot);
@@ -156,7 +189,7 @@ void camera_update_transform(Camera* camera)
     mat4_mul(&camera->world_transform, &trans);
 }
 
-void entity_update_transform(Entity* ent)
+void entity_update_transform(Entity *ent)
 {
     Mat4 rot;
     mat4_set_identity(&rot);
@@ -179,7 +212,7 @@ void entity_update_transform(Entity* ent)
     mat4_mul(&ent->world_transform, &scl);
 }
 
-void check_gl_errors(char* context)
+void check_gl_errors(char *context)
 {
     GLenum error = glGetError();
     if (GL_NO_ERROR != error)

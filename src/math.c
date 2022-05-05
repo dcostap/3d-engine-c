@@ -27,7 +27,8 @@ float sin_deg(float degrees)
 
 #pragma region VECTORS
 
-void lerp_vectors(float progress, Vec3 start, Vec3 end, Vec3 *result) {
+void vec3_lerp(float progress, Vec3 start, Vec3 end, Vec3 *result)
+{
     result->x = start.x + (end.x - start.x) * progress;
     result->y = start.y + (end.y - start.y) * progress;
     result->z = start.z + (end.z - start.z) * progress;
@@ -148,7 +149,6 @@ void vec3_cross(Vec3 *dest, Vec3 a, Vec3 b)
     dest->z = a.x * b.y - b.x * a.y;
 }
 
-
 #pragma endregion
 
 #pragma region MATRICES
@@ -256,9 +256,9 @@ void mat4_copy_to(const Mat4 *src, Mat4 *dst)
     dst->mtx[3 + 3 * 4] = src->mtx[3 + 3 * 4];
 }
 
-Vec3 X_AXIS = { 1.0f, 0.0f, 0.0f };
-Vec3 Y_AXIS = { 0.0f, 1.0f, 0.0f };
-Vec3 Z_AXIS = { 0.0f, 0.0f, 1.0f };
+Vec3 X_AXIS = {1.0f, 0.0f, 0.0f};
+Vec3 Y_AXIS = {0.0f, 1.0f, 0.0f};
+Vec3 Z_AXIS = {0.0f, 0.0f, 1.0f};
 
 /**
  * Rotates a mat4f matrix about a given axis
@@ -283,7 +283,7 @@ void mat4_mul(Mat4 *m1, const Mat4 *m2)
         for (int i = 0; i < 4; i++)
         {
             m1->mtx[4 * i + j] = m2->mtx[4 * i] * tmp[0] + m2->mtx[4 * i + 1] * tmp[1] +
-                m2->mtx[4 * i + 2] * tmp[2] + m2->mtx[4 * i + 3] * tmp[3];
+                                 m2->mtx[4 * i + 2] * tmp[2] + m2->mtx[4 * i + 3] * tmp[3];
         }
     }
 }
@@ -378,19 +378,22 @@ void vec3_transform_by_mat4(Vec3 *vec, Mat4 *mtx)
     vec->z = tmp[2] / tmp[3];
 }
 
-void mat4_get_translation(Mat4 *src, Vec3 *dst) {
+void mat4_get_translation(Mat4 *src, Vec3 *dst)
+{
     dst->x = src->mtx[3];
     dst->y = src->mtx[7];
     dst->y = src->mtx[11];
 }
 
-void mat4_get_scale(Mat4 *src, Vec3 *dst) {
+void mat4_get_scale(Mat4 *src, Vec3 *dst)
+{
     dst->x = src->mtx[3];
     dst->y = src->mtx[7];
     dst->y = src->mtx[11];
 }
 
-void mat4_transpose(Mat4 *mat) {
+void mat4_transpose(Mat4 *mat)
+{
     float a01 = mat->mtx[1];
     float a02 = mat->mtx[2];
     float a03 = mat->mtx[3];
@@ -412,7 +415,8 @@ void mat4_transpose(Mat4 *mat) {
     mat->mtx[14] = a23;
 }
 
-void mat4_invert(Mat4 *mat) {
+void mat4_invert(Mat4 *mat)
+{
     float a00 = mat->mtx[0];
     float a01 = mat->mtx[1];
     float a02 = mat->mtx[2];
@@ -447,7 +451,8 @@ void mat4_invert(Mat4 *mat) {
     float det =
         b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
-    if (!det) {
+    if (!det)
+    {
         printf("mat4_invert: Invalid matrix input?\n");
         return;
     }
@@ -472,9 +477,12 @@ void mat4_invert(Mat4 *mat) {
     mat->mtx[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
 }
 
-void print_mat4(Mat4 mat) {
-    for (int a = 0; a < 4; a++) {
-        for (int b = 0; b < 4; b++) {
+void print_mat4(Mat4 mat)
+{
+    for (int a = 0; a < 4; a++)
+    {
+        for (int b = 0; b < 4; b++)
+        {
             printf("%.2f  ", mat.mtx[b + (a * 4)]);
         }
         printf("\n");
@@ -484,10 +492,10 @@ void print_mat4(Mat4 mat) {
 
 #pragma endregion
 
-
 #pragma region QUATERNIONS
 
-void mat4_set_quaternion(Quaternion q, Mat4 *mtx) {
+void mat4_set_quaternion(Quaternion q, Mat4 *mtx)
+{
     float xx = q.x * q.x;
     float xy = q.x * q.y;
     float xz = q.x * q.z;
@@ -516,11 +524,45 @@ void mat4_set_quaternion(Quaternion q, Mat4 *mtx) {
     mtx->mtx[3 + 3 * 4] = 1.0f;
 }
 
-void quat_set_identity(Quaternion *q) {
+void quat_set_identity(Quaternion *q)
+{
     q->x = 0.0f;
     q->y = 0.0f;
     q->z = 0.0f;
     q->w = 1.0f;
+}
+
+void quat_slerp(float alpha, Quaternion start, Quaternion end, Quaternion *result)
+{
+    float d = start.x * end.x + start.y * end.y + start.z * end.z + start.w * end.w;
+    float absDot = d < 0.f ? -d : d;
+
+    float scale0 = 1.0f - alpha;
+    float scale1 = alpha;
+
+    // Check if the angle between the 2 quaternions was big enough to
+    // warrant such calculations
+    if ((1 - absDot) > 0.1)
+    { // Get the angle between the 2 quaternions,
+        // and then store the sin() of that angle
+        float angle = (float) acos(absDot);
+        float invSinTheta = 1.0f / sin(angle);
+
+        // Calculate the scale for q1 and q2, according to the angle and
+        // its sine value
+        scale0 = ((float) sin((1.0f - alpha) * angle) * invSinTheta);
+        scale1 = ((float) sin((alpha * angle)) * invSinTheta);
+    }
+
+    if (d < 0.f)
+        scale1 = -scale1;
+
+    // Calculate the x, y, z and w values for the quaternion by using a
+    // special form of linear interpolation for quaternions.
+    result->x = (scale0 * start.x) + (scale1 * end.x);
+    result->y = (scale0 * start.y) + (scale1 * end.y);
+    result->z = (scale0 * start.z) + (scale1 * end.z);
+    result->w = (scale0 * start.w) + (scale1 * end.w);
 }
 
 #pragma endregion

@@ -12,7 +12,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "(gdb) Launch",
+            "name": "(Linux) Run C app",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/app",

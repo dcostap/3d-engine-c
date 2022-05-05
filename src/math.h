@@ -39,7 +39,7 @@ float sin_deg(float degrees);
 // Search-select function definitions
 // ^\w+ \w+\(.+(?=\))\)
 
-void lerp_vectors(float progress, Vec3 start, Vec3 end, Vec3 *result);
+void vec3_lerp(float progress, Vec3 start, Vec3 end, Vec3 *result);
 void rotate_vector(Vec3 *vector, float rotation_x, float rotation_y, float rotation_z);
 float vec3_dot_product(Vec3 v1, Vec3 v2);
 float vec3_get_length(Vec3 v);
@@ -70,3 +70,4 @@ void print_mat4(Mat4 mat);
 void mat4_get_translation(Mat4 *src, Vec3 *dst);
 void mat4_set_quaternion(Quaternion q, Mat4 *mtx);
 void quat_set_identity(Quaternion *q);
+void quat_slerp(float alpha, Quaternion start, Quaternion end, Quaternion *result);

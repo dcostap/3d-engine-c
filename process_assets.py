@@ -43,20 +43,25 @@ class AnimBoneData:
 
 @dataclass
 class AnimData:
+    duration: float = 0.0
     name: str = ""
+    filename: str = ""
     skeleton_name: str = None
     bones_indexed: list = field(default_factory=list)
 
+def format_float(f):
+    return '{0:.5}'.format(f)
+
 
 def export_anim_data(data: AnimData):
-    new_filename_no_extension = data.name
+    new_filename_no_extension = data.filename
 
     with open("./src/anims/" + new_filename_no_extension + ".h", "w") as file:
         file.write(textwrap.dedent(
             f"""\
-                #include "../graphics.h"
+            #include "../graphics.h"
 
-                extern SkeletonAnimation {new_filename_no_extension};
+            extern SkeletonAnimation {new_filename_no_extension};
             """))
 
     bone_nodes_code = []
@@ -68,32 +73,31 @@ def export_anim_data(data: AnimData):
                 static int {bone.name}_children_indices[] = {{
                     { ", ".join([str(i) for i in bone.children_indices]) }
                 }};
-            """
+                """
         else:
             indices = ""
 
         if bone.position:
             bone_position = f"""\
                 .bind_position = {{ .x = {bone.position[0]}, .y = {bone.position[1]}, .z = {bone.position[2]}, }},
-            """
+                """
         else:
             bone_position = ""
 
         if bone.scale:
             bone_scale = f"""\
                 .bind_scale = {{ .x = {bone.scale[0]}, .y = {bone.scale[1]}, .z = {bone.scale[2]}, }},
-            """
+                """
         else:
             bone_scale = ""
 
         if bone.rotation:
             bone_rotation = f"""\
                 .bind_rotation = {{ .x = {bone.rotation[0]}, .y = {bone.rotation[1]}, .z = {bone.rotation[2]}, .w = {bone.rotation[3]}, }},
-            """
+                """
         else:
             bone_rotation = ""
 
-        print(bone.anim_keyframe_translation_timings)
         bone_nodes_code.append(f"""\
             static float {bone.name}_anim_keyframe_translation_timings[] = {{
                 {", ".join( ['{0:.5}f'.format(time) for time in bone.anim_keyframe_translation_timings] )}
@@ -148,7 +152,7 @@ def export_anim_data(data: AnimData):
                 .children_indices = { f"{bone.name}_children_indices" if has_children else "NULL"},
                 .children_size = { f"{len(bone.children_indices)}" if has_children else "0"},
             }};
-        """)
+            """)
 
     animation_code = f"""\
         static Mat4 {data.name}_joint_transforms[{len(data.bones_indexed)}];
@@ -160,8 +164,9 @@ def export_anim_data(data: AnimData):
             .indexed_bones = {data.name}_indexed_bones,
             .indexed_bones_size = {len(data.bones_indexed)},
             .joint_transforms = {data.name}_joint_transforms,
+            .duration = {format_float(data.duration)}f,
         }};
-    """
+        """
 
     with open("./src/anims/" + new_filename_no_extension + ".c", "w") as file:
         file.write(textwrap.dedent(
@@ -171,7 +176,7 @@ def export_anim_data(data: AnimData):
                 {os.linesep.join(bone_nodes_code)}
 
                 {animation_code}
-            """))
+                """))
 
 
 def export_model_data(data: RawModelData):
@@ -183,15 +188,15 @@ def export_model_data(data: RawModelData):
     for vertex in data.vertices:
         vertices_c += textwrap.dedent(
             f"""\
-                {{ {'{0:.5}'.format(vertex["x"])}f, {'{0:.5}'.format(vertex["y"])}f, {'{0:.5}'.format(vertex["z"])}f }},
-            """)
+                {{ {format_float(vertex["x"])}f, {format_float(vertex["y"])}f, {format_float(vertex["z"])}f }},
+                """)
 
     normals_c = ""
     for normal in data.normals:
         normals_c += textwrap.dedent(
             f"""\
-                {{ {'{0:.5}'.format(normal["x"])}f, {'{0:.5}'.format(normal["y"])}f, {'{0:.5}'.format(normal["z"])}f }},
-            """)
+                {{ {format_float(normal["x"])}f, {format_float(normal["y"])}f, {format_float(normal["z"])}f }},
+                """)
 
     uvs_c = ""
     if len(data.uvs) > 0:
@@ -199,8 +204,8 @@ def export_model_data(data: RawModelData):
             # UVs are mirrored vertically so they can be correctly displayed in OpenGL
             uvs_c += textwrap.dedent(
                 f"""\
-                    {{ {'{0:.5}'.format(uv["u"])}f, {'{0:.5}'.format(1 - uv["v"])}f }},
-                """)
+                    {{ {format_float(uv["u"])}f, {format_float(1 - uv["v"])}f }},
+                    """)
 
     bones_c = ""
     if len(data.bones) > 0:
@@ -208,14 +213,14 @@ def export_model_data(data: RawModelData):
             bones_c += textwrap.dedent(
                 f"""\
                     {{ {str(bone[0])}, {str(bone[1])}, {str(bone[2])}, {str(bone[3])} }},
-                """)
+                    """)
     weights_c = ""
     if len(data.weights) > 0:
         for weight in data.weights:
             weights_c += textwrap.dedent(
                 f"""\
-                    {{ {'{0:.5}'.format(weight[0])}f, {'{0:.5}'.format(weight[1])}f, {'{0:.5}'.format(weight[2])}f, {'{0:.5}'.format(weight[3])}f, }},
-                """)
+                    {{ {format_float(weight[0])}f, {format_float(weight[1])}f, {format_float(weight[2])}f, {format_float(weight[3])}f, }},
+                    """)
 
     indices_c = ""
     for index in data.indices:
@@ -227,7 +232,7 @@ def export_model_data(data: RawModelData):
                 #include "../graphics.h"
 
                 extern Mesh {new_filename_no_extension};
-            """))
+                """))
 
     if len(data.uvs) > 0:
         uvs_c_full = textwrap.dedent(
@@ -235,7 +240,7 @@ def export_model_data(data: RawModelData):
                 static float uvs[{str(len(data.uvs))}][2] = {{
                     {uvs_c}
                 }};
-            """)
+                """)
     else:
         uvs_c_full = ""
 
@@ -245,7 +250,7 @@ def export_model_data(data: RawModelData):
                 static int bones[{str(len(data.bones))}][4] = {{
                     {bones_c}
                 }};
-            """)
+                """)
     else:
         bones_c_full = ""
 
@@ -255,7 +260,7 @@ def export_model_data(data: RawModelData):
                 static float weights[{str(len(data.weights))}][4] = {{
                     {weights_c}
                 }};
-            """)
+                """)
     else:
         weights_c_full = ""
 
@@ -340,7 +345,8 @@ def read_gltf_accessor_data(gltf, accessor) -> list:
         d = data[index:index+data_byte_length]
 
         if unpack_format is None:
-            raise ValueError(f"Unsupported data type with id: {accessor.componentType}. Needs to be added.")
+            raise ValueError(
+                f"Unsupported data type with id: {accessor.componentType}. Needs to be added.")
 
         d = struct.unpack("<" + unpack_format * n, d)
         all_data.append(d[0] if n == 1 else d)
@@ -431,12 +437,16 @@ def parse_gltf_file(file: str) -> Tuple[list, list]:
 
     # Process animations, and for each one create a new skin with new bones that contain data relevant to the animation
     for anim in gltf.animations:
-        if anim.name is None:
-            print("Animation with no name!")
-            exit()
-
         anim_data = AnimData()
+        anim_data.filename = anim.name
         anim_data.name = anim.name
+        max_time = 0
+
+        if anim_data.name is None:
+            anim_data.name = "animation_" + str(fname.name.split(".")[0])
+            anim_data.filename = anim_data.name
+            print(f"Animation with no name! Changed to {anim_data.name}")
+
         processed_bones = {}
         skin_index_for_this_animation = None
 
@@ -452,7 +462,8 @@ def parse_gltf_file(file: str) -> Tuple[list, list]:
 
                 bone_data.index = index
                 bone_data.name = bone_node.name.replace(".", "_")
-                bone_data.children_indices = [ skin.bones_global_index_to_local_index[index] for index in bone_node.children]
+                bone_data.children_indices = [
+                    skin.bones_global_index_to_local_index[index] for index in bone_node.children]
                 bone_data.inverse_bind = inverse_binds[index]
                 bone_data.position = bone_node.translation
                 bone_data.rotation = bone_node.rotation
@@ -472,11 +483,11 @@ def parse_gltf_file(file: str) -> Tuple[list, list]:
 
             if skin_index_for_this_bone is None:
                 print(
-                    f"Bone in animation {anim.name} doesn't refer to any bone inside any Skin present in the file")
+                    f"Bone in animation {anim.filename} doesn't refer to any bone inside any Skin present in the file")
                 exit()
             elif skin_index_for_this_animation is not None and skin_index_for_this_bone != skin_index_for_this_animation:
                 print(
-                    f"Animation {anim.name} refers to nodes that belong to more than 1 skin!")
+                    f"Animation {anim.filename} refers to nodes that belong to more than 1 skin!")
                 exit()
             elif skin_index_for_this_animation is None:
                 skin_index_for_this_animation = skin_index_for_this_bone
@@ -488,6 +499,8 @@ def parse_gltf_file(file: str) -> Tuple[list, list]:
             timings = []
             for time in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].input]):
                 timings.append(time)
+                if time > max_time:
+                    max_time = time
 
             for transform in read_gltf_accessor_data(gltf, gltf.accessors[anim.samplers[channel.sampler].output]):
                 if animation_type == 'translation':
@@ -501,6 +514,7 @@ def parse_gltf_file(file: str) -> Tuple[list, list]:
                     bone_data.anim_keyframe_scales.append(transform)
 
         anim_data.bones_indexed = processed_bones
+        anim_data.duration = max_time
         anim_data.skeleton_name = gltf.skins[skin_index_for_this_animation].name
         exported_anims.append(anim_data)
 
@@ -529,11 +543,12 @@ def explore_folder_recursive(root):
 
 if __name__ == "__main__":
     # Delete existing generated .c geo files
-    for root, dirs, files in os.walk("./src/models/"):
-        path = root.split(os.sep)
-        for file in files:
-            print("Removing " + root + file + "...")
-            os.remove(root + file)
-    print("-----------------")
+    for folder in ["./src/models/", "./src/anims/"]:
+        for root, dirs, files in os.walk(folder):
+            path = root.split(os.sep)
+            for file in files:
+                print("Removing " + root + file + "...")
+                os.remove(root + file)
+        print("-----------------")
 
     explore_folder_recursive("assets/models")

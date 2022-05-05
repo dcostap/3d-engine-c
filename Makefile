@@ -2,7 +2,7 @@ OUTDIRS := build obj/models obj/png obj/anims
 SRCFILES := $(wildcard src/*.c) $(wildcard src/models/*.c) $(wildcard src/png/*.c) $(wildcard src/anims/*.c)
 
 INCLUDES = -Iinclude -Iinclude/SDL/include -Iinclude/SDL2_gfx -Iinclude/glew/include
-CFLAGS = -Wall -Wextra -pg -std=c99 -Wno-unused-parameter -Wno-unknown-pragmas -O0
+CFLAGS = -Wall -Wextra -pg -std=c99 -Wno-unused-parameter -Wno-unknown-pragmas -O0 -Werror=incompatible-pointer-types
 
 .PHONY: default all test release clean dirs
 

@@ -63,7 +63,13 @@ typedef struct SkeletonAnimation {
     AnimSkeletonBone **indexed_bones;
     int indexed_bones_size;
     Mat4 *joint_transforms;
+    float duration;
 } SkeletonAnimation;
+
+typedef struct EntityAnimation {
+    float time;
+    SkeletonAnimation *data;
+} EntityAnimation;
 
 typedef struct Entity
 {
@@ -72,6 +78,7 @@ typedef struct Entity
     Vec3 scale;
     Mat4 world_transform;
     Mesh *mesh;
+    EntityAnimation *animation;
 } Entity;
 
 void draw_mesh(Mesh *mesh);

@@ -47,7 +47,8 @@
         "geo_rigged_figure.h": "c",
         "stdlib.h": "c",
         "geo_rigged_cube.h": "c",
-        "geo_cylinder.h": "c"
+        "geo_cylinder.h": "c",
+        "animation_cesiumman.h": "c"
     },
     "makefile.launchConfigurations": [
         {
