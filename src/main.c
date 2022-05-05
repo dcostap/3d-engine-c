@@ -1,6 +1,6 @@
 #include "main.h"
 #include "input.h"
-#include "models/geo_rigged_cube.h"
+#include "models/geo_Cylinder.h"
 
 Camera camera;
 
@@ -39,10 +39,10 @@ bool main_loop()
             return true;
         }
 
-        ent1.mesh = &geo_rigged_cube;
+        ent1.mesh = &geo_Cylinder;
         // ent2.mesh = &geo_untitled;
 
-        bind_mesh_to_opengl(&geo_rigged_cube);
+        bind_mesh_to_opengl(&geo_Cylinder);
         // bind_mesh_to_opengl(&geo_untitled);
 
         camera.position.z = 15.f;

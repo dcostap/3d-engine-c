@@ -38,13 +38,19 @@ typedef struct AnimSkeletonBone {
 
     Mat4 inverse_bind;
 
-    Vec3 position;
+    Vec3 bind_position;
+    Quaternion bind_rotation;
+    Vec3 bind_scale;
 
-    int keyframe_size;
+    int keyframe_translation_size;
     float *anim_keyframe_translation_timings;
     Vec3 *anim_keyframe_translations;
-    // Quaternion *anim_keyframe_rotations;
+    int keyframe_rotation_size;
+    Quaternion *anim_keyframe_rotations;
+    float *anim_keyframe_rotation_timings;
+    int keyframe_scale_size;
     Vec3 *anim_keyframe_scales;
+    float *anim_keyframe_scale_timings;
 
     int *children_indices;
     int children_size;

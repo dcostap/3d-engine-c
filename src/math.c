@@ -483,3 +483,44 @@ void print_mat4(Mat4 mat) {
 }
 
 #pragma endregion
+
+
+#pragma region QUATERNIONS
+
+void mat4_set_quaternion(Quaternion q, Mat4 *mtx) {
+    float xx = q.x * q.x;
+    float xy = q.x * q.y;
+    float xz = q.x * q.z;
+    float xw = q.x * q.w;
+    float yy = q.y * q.y;
+    float yz = q.y * q.z;
+    float yw = q.y * q.w;
+    float zz = q.z * q.z;
+    float zw = q.z * q.w;
+
+    mtx->mtx[0 + 0 * 4] = 1.0f - 2 * (yy + zz);
+    mtx->mtx[0 + 1 * 4] = 2.0f * (xy - zw);
+    mtx->mtx[0 + 2 * 4] = 2.0f * (xz + yw);
+    mtx->mtx[0 + 3 * 4] = 0.0f;
+    mtx->mtx[1 + 0 * 4] = 2.0f * (xy + zw);
+    mtx->mtx[1 + 1 * 4] = 1.0f - 2 * (xx + zz);
+    mtx->mtx[1 + 2 * 4] = 2.0f * (yz - xw);
+    mtx->mtx[1 + 3 * 4] = 0.0f;
+    mtx->mtx[2 + 0 * 4] = 2.0f * (xz - yw);
+    mtx->mtx[2 + 1 * 4] = 2.0f * (yz + xw);
+    mtx->mtx[2 + 2 * 4] = 1.0f - 2 * (xx + yy);
+    mtx->mtx[2 + 3 * 4] = 0.0f;
+    mtx->mtx[3 + 0 * 4] = 0.0f;
+    mtx->mtx[3 + 1 * 4] = 0.0f;
+    mtx->mtx[3 + 2 * 4] = 0.0f;
+    mtx->mtx[3 + 3 * 4] = 1.0f;
+}
+
+void quat_set_identity(Quaternion *q) {
+    q->x = 0.0f;
+    q->y = 0.0f;
+    q->z = 0.0f;
+    q->w = 1.0f;
+}
+
+#pragma endregion

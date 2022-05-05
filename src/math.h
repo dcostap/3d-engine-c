@@ -15,6 +15,14 @@ typedef struct Vec3
     float z;
 } Vec3;
 
+typedef struct Quaternion
+{
+    float x;
+    float y;
+    float z;
+    float w;
+} Quaternion;
+
 typedef struct Mat4
 {
     float mtx[16];
@@ -60,3 +68,5 @@ void mat4_transpose(Mat4 *mat);
 void mat4_invert(Mat4 *mat);
 void print_mat4(Mat4 mat);
 void mat4_get_translation(Mat4 *src, Vec3 *dst);
+void mat4_set_quaternion(Quaternion q, Mat4 *mtx);
+void quat_set_identity(Quaternion *q);

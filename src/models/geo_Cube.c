@@ -1,4 +1,4 @@
-                #include "geo_rigged_cube.h"
+                #include "geo_Cube.h"
 
                 static float vertices[24][3] = {
                 { 1.0f, 2.1884f, -1.0f },
@@ -146,7 +146,7 @@
                 1,14,19,1,19,6,10,7,20,10,20,23,21,18,12,21,12,15,16,3,9,16,9,22,5,2,8,5,8,11,17,13,0,17,0,4,
                 };
 
-                Mesh geo_rigged_cube = {
+                Mesh geo_Cube = {
                     .vertices = vertices,
                     .vertices_size = 24,
                     .normals = normals,

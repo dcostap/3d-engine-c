@@ -46,7 +46,8 @@
         "anim_0.h": "c",
         "geo_rigged_figure.h": "c",
         "stdlib.h": "c",
-        "geo_rigged_cube.h": "c"
+        "geo_rigged_cube.h": "c",
+        "geo_cylinder.h": "c"
     },
     "makefile.launchConfigurations": [
         {
