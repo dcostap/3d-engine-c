@@ -84,8 +84,9 @@ typedef struct Entity
 void draw_mesh(Mesh *mesh);
 void draw_entity(Entity *ent);
 void bind_mesh_to_opengl(Mesh *mesh);
+bool load_shader(GLuint *shader_program_id, char *vert_shader_file, char *frag_shader_file);
 bool load_shaders();
-void start_shader();
+void start_shader(GLuint shader_id);
 void stop_shader();
 
-extern GLuint gl_shader_program;
+extern GLuint gl_3d_shader;

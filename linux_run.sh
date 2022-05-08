@@ -1,1 +1,1 @@
-make linux && ./build/app
+make -s linux && ./build/app

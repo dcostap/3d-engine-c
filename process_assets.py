@@ -368,7 +368,7 @@ def parse_gltf_file(file: str) -> Tuple[list, list]:
     # Index the skins (armatures) and store its bones, mapping its global node index to the local bone index that'll be used in the application
     skins = {}
     for index, skin in enumerate(gltf.skins):
-        skin_data = SkinWithBones()
+        skin_data = SkinWithBones()ddd
         skin_data.skin_node = skin
         for (new_local_index, joint_index) in enumerate(skin.joints):
             skin_data.bones_indexed.append(gltf.nodes[joint_index])
@@ -378,7 +378,7 @@ def parse_gltf_file(file: str) -> Tuple[list, list]:
     # store the data of all mesh nodes
     for node in [node for node in gltf.nodes if node.mesh is not None]:
         mesh = gltf.meshes[node.mesh]
-        mesh_data = RawModelData(mesh.name)
+        mesh_data = RawModelData(mesh.name.replace(".", "_"))
 
         if len(mesh.primitives) > 1:
             print("⚠️ Multiple mesh primitives are not supported")

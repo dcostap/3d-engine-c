@@ -1,7 +1,9 @@
 #include "graphics.h"
 #include "png/lodepng.h"
 
-GLuint gl_shader_program = 0;
+GLuint gl_3d_shader = 0;
+GLuint gl_2d_shader = 0;
+
 #define uint unsigned int
 #define uchar unsigned char
 
@@ -30,12 +32,17 @@ uchar *load_png(const char *filename, uint *width, uint *height)
     return image;
 }
 
-bool load_shaders()
+bool load_shaders() {
+    load_shader(&gl_3d_shader, "assets/vert_3d.glsl", "assets/frag_3d.glsl");
+    load_shader(&gl_2d_shader, "assets/vert_2d.glsl", "assets/frag_2d.glsl");
+}
+
+bool load_shader(GLuint *shader_program_id, char *vert_shader_file, char *frag_shader_file)
 {
     size_t size;
 
-    const char *vert_shader = read_file("assets/vert.glsl", &size);
-    const char *frag_shader = read_file("assets/frag.glsl", &size);
+    const char *vert_shader = read_file(vert_shader_file, &size);
+    const char *frag_shader = read_file(frag_shader_file, &size);
 
     GLint status;
     char err_buf[512];
@@ -70,8 +77,6 @@ bool load_shaders()
     glAttachShader(new_program, vertex_id);
     glAttachShader(new_program, fragment_id);
 
-    glBindFragDataLocation(new_program, 0, "out_color");
-
     glLinkProgram(new_program);
     glUseProgram(new_program);
 
@@ -84,7 +89,7 @@ bool load_shaders()
         return false;
     }
 
-    gl_shader_program = new_program;
+    *shader_program_id = new_program;
 
     // cleanup
     glDetachShader(new_program, fragment_id);
@@ -95,9 +100,9 @@ bool load_shaders()
     return true;
 }
 
-void start_shader()
+void start_shader(GLuint shader_id)
 {
-    glUseProgram(gl_shader_program);
+    glUseProgram(shader_id);
 }
 
 void stop_shader()
@@ -160,7 +165,7 @@ void store_float_data_in_vbo(void *data, GLsizeiptr data_size, int attribute_num
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_STATIC_DRAW);
 
-    GLint attrib_id = glGetAttribLocation(gl_shader_program, attribute_name);
+    GLint attrib_id = glGetAttribLocation(gl_3d_shader, attribute_name);
     glVertexAttribPointer(attrib_id, attribute_number, GL_FLOAT, GL_FALSE, attribute_number * sizeof(GLfloat), NULL);
     glEnableVertexAttribArray(attrib_id);
 
@@ -174,7 +179,7 @@ void store_int_data_in_vbo(void *data, GLsizeiptr data_size, int attribute_numbe
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, data_size, data, GL_STATIC_DRAW);
 
-    GLint attrib_id = glGetAttribLocation(gl_shader_program, attribute_name);
+    GLint attrib_id = glGetAttribLocation(gl_3d_shader, attribute_name);
     glVertexAttribPointer(attrib_id, attribute_number, GL_INT, GL_FALSE, attribute_number * sizeof(GLint), NULL);
     glEnableVertexAttribArray(attrib_id);
 
@@ -183,7 +188,7 @@ void store_int_data_in_vbo(void *data, GLsizeiptr data_size, int attribute_numbe
 
 void draw_entity(Entity *ent)
 {
-    GLuint id = glGetUniformLocation(gl_shader_program, "local_transform");
+    GLuint id = glGetUniformLocation(gl_3d_shader, "local_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, ent->world_transform.mtx);
 
     if (ent->animation != NULL)
@@ -203,7 +208,7 @@ void draw_entity(Entity *ent)
             {
                 char *name;
                 asprintf(&name, "joint_matrices[%d]", i);
-                id = glGetUniformLocation(gl_shader_program, name);
+                id = glGetUniformLocation(gl_3d_shader, name);
                 glUniformMatrix4fv(id, 1, GL_FALSE, ent->animation->data->joint_transforms[i].mtx);
             }
         }

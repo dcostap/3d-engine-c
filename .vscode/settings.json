@@ -48,7 +48,9 @@
         "stdlib.h": "c",
         "geo_rigged_cube.h": "c",
         "geo_cylinder.h": "c",
-        "animation_cesiumman.h": "c"
+        "animation_cesiumman.h": "c",
+        "geo_f_mut00_005.h": "c",
+        "walk_final.h": "c"
     },
     "makefile.launchConfigurations": [
         {

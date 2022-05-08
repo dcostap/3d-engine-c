@@ -6,7 +6,7 @@ typedef struct Camera
 {
     Vec3 position;
     Vec3 rotation;
-    Mat4 world_transform;
+    Mat4 transform;
 } Camera;
 
 int main(int argc, char *argv[]);

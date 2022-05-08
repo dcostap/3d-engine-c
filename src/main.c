@@ -1,7 +1,7 @@
 #include "main.h"
 #include "input.h"
-#include "models/geo_Cesium_Man.h"
-#include "anims/animation_CesiumMan.h"
+#include "models/geo_f_mut00_005.h"
+#include "anims/walk_final.h"
 
 Camera camera;
 
@@ -10,17 +10,13 @@ void entity_update_transform(Entity *ent);
 void check_gl_errors(char *context);
 void draw();
 
-EntityAnimation a = (EntityAnimation){
-        .data = &animation_CesiumMan
-    };
-
 Entity ent1 = {
     .position = {0.0f, 0.0f, 0.0f},
     .rotation = {0.0f, 0.0f, 0.0f},
     .scale = {1.0f, 1.0f, 1.0f},
-    .animation = &a /*&(EntityAnimation){
-        .data = &animation_CesiumMan
-    }*/,
+    .animation = &(EntityAnimation){
+        .data = &walk_final
+    }
 };
 
 Entity ent2 = {
@@ -50,10 +46,10 @@ bool main_loop()
             return true;
         }
 
-        ent1.mesh = &geo_Cesium_Man;
+        ent1.mesh = &geo_f_mut00_005;
         // ent2.mesh = &geo_untitled;
 
-        bind_mesh_to_opengl(&geo_Cesium_Man);
+        bind_mesh_to_opengl(&geo_f_mut00_005);
         // bind_mesh_to_opengl(&geo_untitled);
 
         camera.position.z = 15.f;
@@ -145,17 +141,17 @@ void draw()
     glClearColor(0.3f, 0.2f, 0.5f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    start_shader();
+    start_shader(gl_3d_shader);
 
     Mat4 projection;
     set_projection_matrix(&projection, 90.0f, 0.1f, 100.0f, screen_width, screen_height);
 
-    GLuint id = glGetUniformLocation(gl_shader_program, "proj_transform");
+    GLuint id = glGetUniformLocation(gl_3d_shader, "proj_transform");
     glUniformMatrix4fv(id, 1, GL_FALSE, projection.mtx);
 
     camera_update_transform(&camera);
-    id = glGetUniformLocation(gl_shader_program, "view_transform");
-    glUniformMatrix4fv(id, 1, GL_FALSE, camera.world_transform.mtx);
+    id = glGetUniformLocation(gl_3d_shader, "view_transform");
+    glUniformMatrix4fv(id, 1, GL_FALSE, camera.transform.mtx);
 
     ent2.rotation.y += 2.0f;
     entity_update_transform(&ent1);
@@ -184,9 +180,9 @@ void camera_update_transform(Camera *camera)
     mat4_translate_by_vec3(&trans, camera->position);
     vec3_scl(&camera->position, -1.f, -1.f, -1.f);
 
-    mat4_set_identity(&camera->world_transform);
-    mat4_mul(&camera->world_transform, &rot);
-    mat4_mul(&camera->world_transform, &trans);
+    mat4_set_identity(&camera->transform);
+    mat4_mul(&camera->transform, &rot);
+    mat4_mul(&camera->transform, &trans);
 }
 
 void entity_update_transform(Entity *ent)
