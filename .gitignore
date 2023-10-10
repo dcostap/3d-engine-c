@@ -3,6 +3,8 @@ obj
 CMakeLists.txt.*
 gmon.out
 
+src/anims/*
+src/models/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

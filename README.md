@@ -7,6 +7,17 @@ Create the output `build` folder:
 
     mkdir build
 
+Create more output folders (I need to automate this in the Makefile somehow:):
+
+    mkdir obj
+    mkdir obj/anims
+    mkdir obj/models
+    mkdir obj/png
+
+Generate the 3D assets:
+
+    python3 process_assets.py
+
 ## Compiling for Linux
 
     sudo apt-get install libsdl2-dev libsdl2-gfx-dev libsdl2-image-dev
@@ -22,6 +33,6 @@ Alternatively: `./linux_run.sh`
 
 `apt install mingw-w64`
 
-Run `make build/windows.exe` and open the output in `./build`.
+Run `make -s windows` and open the output in `./build`.
 
 Alternatively: `./windows_run.sh`
